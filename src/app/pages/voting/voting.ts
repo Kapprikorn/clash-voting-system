@@ -18,6 +18,7 @@ import {
 import { Auth, User } from '@angular/fire/auth';
 import { LoginComponent } from '../../components/login/login';
 import { Subscription } from 'rxjs';
+import {Champion, Datadragon} from '../../services/http/datadragon';
 
 @Component({
   selector: 'app-voting',
@@ -29,6 +30,7 @@ import { Subscription } from 'rxjs';
 export class VotingComponent implements OnInit, OnDestroy {
   private firestore = inject(Firestore);
   private auth = inject(Auth);
+  private dataDragon = inject(Datadragon);
   private championsSubscription?: Subscription;
 
   championName: string = '';
@@ -41,6 +43,8 @@ export class VotingComponent implements OnInit, OnDestroy {
   champions: any[] = [];
   isAdmin: boolean = false;
   currentUser: User | null = null;
+  championNames: string[] = [];
+  availableChampions: Champion[] = [];
 
   async ngOnInit() {
     // Listen to auth state changes
@@ -50,6 +54,8 @@ export class VotingComponent implements OnInit, OnDestroy {
 
     await this.loadCurrentSession();
     this.loadChampions();
+
+    this.loadAvailableChampions();
   }
 
   ngOnDestroy() {
@@ -282,5 +288,17 @@ export class VotingComponent implements OnInit, OnDestroy {
     } finally {
       this.isLoading = false;
     }
+  }
+
+  private loadAvailableChampions(): void {
+    this.dataDragon.getAllChampions().subscribe({
+      next: (champions) => {
+        this.availableChampions = champions.sort(); // Sort alphabetically
+      },
+      error: (error) => {
+        console.error('Failed to load champions:', error);
+        this.availableChampions = []; // Fallback to empty array
+      }
+    });
   }
 }
