@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {CommonModule, NgOptimizedImage} from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
   Firestore,
@@ -25,12 +25,12 @@ import {Champion, Datadragon} from '../../services/http/datadragon';
   templateUrl: './voting.html',
   styleUrls: ['./voting.scss'],
   standalone: true,
-  imports: [FormsModule, CommonModule, LoginComponent]
+  imports: [FormsModule, CommonModule, LoginComponent, NgOptimizedImage]
 })
 export class VotingComponent implements OnInit, OnDestroy {
   private firestore = inject(Firestore);
   private auth = inject(Auth);
-  private dataDragon = inject(Datadragon);
+  protected dataDragon = inject(Datadragon);
   private championsSubscription?: Subscription;
 
   championName: string = '';

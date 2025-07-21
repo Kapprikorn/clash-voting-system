@@ -40,6 +40,7 @@ export interface ChampionResponse {
 })
 export class Datadragon {
   private readonly baseUrl = 'https://ddragon.leagueoflegends.com/cdn/15.14.1/data/en_US';
+  public readonly imageBaseUrl = 'https://ddragon.leagueoflegends.com/cdn/15.14.1/img/champion/';
 
   constructor(private http: HttpClient) {}
 
