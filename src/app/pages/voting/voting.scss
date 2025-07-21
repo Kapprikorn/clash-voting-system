@@ -1,0 +1,37 @@
+.voting-card {
+  transition: all 0.2s ease-in-out;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.progress {
+  transition: all 0.3s ease-in-out;
+}
+
+.progress-bar {
+  transition: width 0.5s ease-in-out;
+}
+
+.card.border-success {
+  box-shadow: 0 0 10px rgba(40, 167, 69, 0.3);
+}
+
+.btn {
+  transition: all 0.2s ease-in-out;
+}
+
+.spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+}
+
+.badge {
+  font-size: 0.9rem;
+}
+
+.voting-stats {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
