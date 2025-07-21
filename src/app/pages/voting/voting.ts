@@ -301,4 +301,11 @@ export class VotingComponent implements OnInit, OnDestroy {
       }
     });
   }
+
+  protected getChampionImageByName(name: string): string {
+    const champion = this.availableChampions.find(c =>
+      c.name.toLocaleLowerCase() === name.toLowerCase()
+    );
+    return champion ? this.dataDragon.imageBaseUrl + champion.image.full : '';
+  }
 }

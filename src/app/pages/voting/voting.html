@@ -130,7 +130,7 @@
                   <!-- Champion Image and Name -->
                   <div class="d-flex align-items-center mb-3">
                     <img
-                      [ngSrc]="dataDragon.imageBaseUrl + champion.name + '.png'"
+                      [ngSrc]="getChampionImageByName(champion.name)"
                       [alt]="champion.name"
                       class="champion-image me-3"
                       width="100"
