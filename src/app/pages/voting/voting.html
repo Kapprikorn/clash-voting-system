@@ -25,24 +25,7 @@
   }
 
   <!-- Admin Controls -->
-  @if (isAdmin) {
-    <div class="card mt-4 border-warning">
-      <div class="card-header bg-warning">
-        <h5>Admin Controls</h5>
-      </div>
-      <div class="card-body">
-        <button
-          class="btn btn-danger"
-          (click)="clearAllChampions()"
-          [disabled]="isLoading">
-          Start New Session (Archive Current)
-        </button>
-        <small class="form-text text-muted">
-          This will create a new voting session and archive the current one.
-        </small>
-      </div>
-    </div>
-  }
+  <app-admin-section [isAdmin]="isAdmin"/>
 
   <!-- Add Champion -->
   <app-add-champion-section [user]="currentUser"

@@ -1,6 +1,6 @@
 import {Component, Input} from '@angular/core';
 import {User} from '@angular/fire/auth';
-import {Champion} from '../../../models/firebase.models';
+import {FirebaseChampion} from '../../../models/firebase.models';
 
 @Component({
   selector: 'app-voting-statistics',
@@ -9,7 +9,7 @@ import {Champion} from '../../../models/firebase.models';
   styleUrl: './voting-statistics.scss'
 })
 export class VotingStatistics {
-  @Input({required: true}) champions!: Champion[];
+  @Input({required: true}) champions!: FirebaseChampion[];
   @Input({required: true}) user!: User | null;
 
   protected getTotalVotes(): number {

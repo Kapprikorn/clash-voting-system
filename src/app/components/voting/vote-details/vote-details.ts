@@ -1,6 +1,6 @@
 import {Component, inject, Input, OnInit} from '@angular/core';
 import {NgOptimizedImage} from "@angular/common";
-import {Champion} from '../../../models/firebase.models';
+import {FirebaseChampion} from '../../../models/firebase.models';
 import {FirebaseService} from '../../../services/http/firebase.service';
 import {User} from '@angular/fire/auth';
 import {firstValueFrom} from 'rxjs';
@@ -18,7 +18,7 @@ export class VoteDetails implements OnInit {
   private firebaseService = inject(FirebaseService);
   private datadragonService = inject(DatadragonService);
 
-  @Input({required: true}) champion!: Champion;
+  @Input({required: true}) champion!: FirebaseChampion;
   @Input({required: true}) sessionId!: string;
   @Input({required: true}) user!: User | null;
 

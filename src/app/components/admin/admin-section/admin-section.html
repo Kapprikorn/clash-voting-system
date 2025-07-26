@@ -1,0 +1,37 @@
+@if (isAdmin) {
+  <div class="card mt-4 border-warning">
+    <div class="card-header bg-warning">
+      <h5>Admin Controls</h5>
+    </div>
+    <div class="card-body">
+      <!-- Success Message -->
+      @if (successMessage) {
+        <div class="alert alert-success" role="alert">
+          {{ successMessage }}
+        </div>
+      }
+
+      <!-- Error Message -->
+      @if (errorMessage) {
+        <div class="alert alert-danger" role="alert">
+          {{ errorMessage }}
+        </div>
+      }
+
+      <button
+        class="btn btn-danger"
+        (click)="clearAllChampions()"
+        [disabled]="isLoading">
+        @if (isLoading) {
+          <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+          Creating New Session...
+        } @else {
+          Start New Session (Archive Current)
+        }
+      </button>
+      <small class="form-text text-muted">
+        This will create a new voting session and archive the current one.
+      </small>
+    </div>
+  </div>
+}

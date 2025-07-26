@@ -13,13 +13,12 @@ export interface VotingSession {
   maxVotesPerUser?: number;
 }
 
-export interface Champion {
+export interface FirebaseChampion {
   id: string;
   name: string;
   imageUrl?: string;
   description?: string;
   votes: string[]; // Array of user IDs who voted
-  createdAt: Date;
 }
 
 export interface VoteRequest {

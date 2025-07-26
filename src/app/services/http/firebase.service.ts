@@ -15,7 +15,7 @@ import {
 } from '@angular/fire/firestore';
 import { Auth, authState } from '@angular/fire/auth';
 import { Observable, from, map } from 'rxjs';
-import { Settings, VotingSession, Champion, VoteRequest } from '../../models/firebase.models';
+import { Settings, VotingSession, FirebaseChampion, VoteRequest } from '../../models/firebase.models';
 
 @Injectable({
   providedIn: 'root'
@@ -132,7 +132,7 @@ export class FirebaseService {
   }
 
   // Champions methods
-  getChampions(sessionId: string): Observable<Champion[]> {
+  getChampions(sessionId: string): Observable<FirebaseChampion[]> {
     const championsCollection = collection(this.firestore, `votingSessions/${sessionId}/champions`);
     const q = query(championsCollection, orderBy('voteCount', 'desc'));
 
@@ -141,8 +141,7 @@ export class FirebaseService {
         const champions = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data(),
-          createdAt: doc.data()['createdAt']?.toDate() || new Date(),
-        } as Champion));
+        } as FirebaseChampion));
         observer.next(champions);
       }, error => observer.error(error));
 
@@ -150,7 +149,7 @@ export class FirebaseService {
     });
   }
 
-  getChampion(sessionId: string, championId: string): Observable<Champion | null> {
+  getChampion(sessionId: string, championId: string): Observable<FirebaseChampion | null> {
     const championDoc = doc(this.firestore, `votingSessions/${sessionId}/champions`, championId);
     return new Observable(observer => {
       const unsubscribe = onSnapshot(championDoc, snapshot => {
@@ -159,8 +158,7 @@ export class FirebaseService {
           observer.next({
             id: snapshot.id,
             ...data,
-            createdAt: data['createdAt']?.toDate() || new Date(),
-          } as Champion);
+          } as FirebaseChampion);
         } else {
           observer.next(null);
         }
@@ -170,7 +168,7 @@ export class FirebaseService {
     });
   }
 
-  createChampion(sessionId: string, data: Omit<Champion, 'id' | 'votes' | 'voteCount' | 'createdAt'>): Observable<DocumentReference> {
+  createChampion(sessionId: string, data: Omit<FirebaseChampion, 'id' | 'votes' | 'voteCount' | 'createdAt'>): Observable<DocumentReference> {
     const championsCollection = collection(this.firestore, `votingSessions/${sessionId}/champions`);
     const championData = {
       ...data,
@@ -180,7 +178,7 @@ export class FirebaseService {
     return from(addDoc(championsCollection, championData));
   }
 
-  updateChampion(sessionId: string, championId: string, data: Partial<Champion>): Observable<void> {
+  updateChampion(sessionId: string, championId: string, data: Partial<FirebaseChampion>): Observable<void> {
     const championDoc = doc(this.firestore, `votingSessions/${sessionId}/champions`, championId);
     const updateData = { ...data };
     delete updateData.id;
