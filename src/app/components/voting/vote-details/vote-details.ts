@@ -1,10 +1,10 @@
 import {Component, inject, Input, OnInit} from '@angular/core';
 import {NgOptimizedImage} from "@angular/common";
-import {Champion} from '../../models/firebase.models';
-import {FirebaseService} from '../../services/http/firebase.service';
+import {Champion} from '../../../models/firebase.models';
+import {FirebaseService} from '../../../services/http/firebase.service';
 import {User} from '@angular/fire/auth';
 import {firstValueFrom} from 'rxjs';
-import {DatadragonService} from '../../services/http/datadragon.service';
+import {DatadragonService} from '../../../services/http/datadragon.service';
 
 @Component({
   selector: 'app-vote-details',

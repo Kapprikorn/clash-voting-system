@@ -1,6 +1,6 @@
 import {Component, Input} from '@angular/core';
 import {User} from '@angular/fire/auth';
-import {Champion} from '../../models/firebase.models';
+import {Champion} from '../../../models/firebase.models';
 
 @Component({
   selector: 'app-voting-statistics',
