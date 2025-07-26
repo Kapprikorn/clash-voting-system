@@ -131,25 +131,7 @@
         </div>
 
         <!-- Rest of your voting statistics section remains the same -->
-        <div class="mt-4 p-3 bg-light rounded">
-          <h6>Voting Statistics</h6>
-          <div class="row text-center">
-            <div class="col">
-              <div class="h4 mb-0 text-primary">{{ getTotalVotes() }}</div>
-              <small class="text-muted">Total Votes</small>
-            </div>
-            <div class="col">
-              <div class="h4 mb-0 text-success">{{ getLeadingChampion()?.name || 'None' }}</div>
-              <small class="text-muted">Leading Champion</small>
-            </div>
-            @if (currentUser) {
-              <div class="col">
-                <div class="h4 mb-0 text-info">{{ getUserVoteCount() }}</div>
-                <small class="text-muted">Your Votes</small>
-              </div>
-            }
-          </div>
-        </div>
+        <app-voting-statistics [champions]="champions" [user]="currentUser" />
       </div>
     </div>
   } @else {

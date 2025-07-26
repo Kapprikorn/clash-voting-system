@@ -15,13 +15,14 @@ import { LoginComponent } from '../../components/login/login';
 import { Subscription } from 'rxjs';
 import {DataDragonChampion, DatadragonService} from '../../services/http/datadragon.service';
 import {VoteDetails} from '../../components/vote-details/vote-details';
+import {VotingStatistics} from '../../components/voting-statistics/voting-statistics';
 
 @Component({
   selector: 'app-voting',
   templateUrl: './voting.html',
   styleUrls: ['./voting.scss'],
   standalone: true,
-  imports: [FormsModule, CommonModule, LoginComponent, VoteDetails]
+  imports: [FormsModule, CommonModule, LoginComponent, VoteDetails, VotingStatistics]
 })
 export class VotingComponent implements OnInit, OnDestroy {
   private firestore = inject(Firestore);
@@ -94,25 +95,12 @@ export class VotingComponent implements OnInit, OnDestroy {
     );
   }
 
-
-
   getUserVoteCount(): number {
     if (!this.currentUser) return 0;
 
     return this.champions.filter(champion =>
       champion.votes?.includes(this.currentUser!.uid)
     ).length;
-  }
-
-  getTotalVotes(): number {
-    return this.champions.reduce((total, champion) => total + (champion.voteCount || 0), 0);
-  }
-
-  getLeadingChampion(): any {
-    if (this.champions.length === 0) return null;
-    return this.champions.reduce((leading, current) =>
-      (current.voteCount || 0) > (leading.voteCount || 0) ? current : leading
-    );
   }
 
   async addChampion() {

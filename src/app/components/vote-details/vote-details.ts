@@ -18,9 +18,9 @@ export class VoteDetails implements OnInit {
   private firebaseService = inject(FirebaseService);
   private datadragonService = inject(DatadragonService);
 
-  @Input() champion!: Champion;
-  @Input() sessionId!: string;
-  @Input() user!: User | null;
+  @Input({required: true}) champion!: Champion;
+  @Input({required: true}) sessionId!: string;
+  @Input({required: true}) user!: User | null;
 
   protected isVoting = false;
   protected successMessage: string = '';
