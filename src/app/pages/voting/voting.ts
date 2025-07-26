@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import {
   Firestore,
   collection,
-  addDoc,
   doc,
   getDoc,
   setDoc,
@@ -14,15 +13,15 @@ import { Auth, User } from '@angular/fire/auth';
 import { LoginComponent } from '../../components/login/login';
 import { Subscription } from 'rxjs';
 import {DataDragonChampion, DatadragonService} from '../../services/http/datadragon.service';
-import {VoteDetails} from '../../components/vote-details/vote-details';
-import {VotingStatistics} from '../../components/voting-statistics/voting-statistics';
+import {VotingSection} from '../../components/voting/voting-section/voting-section';
+import {AddChampionSection} from '../../components/champion/add-champion-section/add-champion-section';
 
 @Component({
   selector: 'app-voting',
   templateUrl: './voting.html',
   styleUrls: ['./voting.scss'],
   standalone: true,
-  imports: [FormsModule, CommonModule, LoginComponent, VoteDetails, VotingStatistics]
+  imports: [FormsModule, CommonModule, LoginComponent, VotingSection, AddChampionSection]
 })
 export class VotingComponent implements OnInit, OnDestroy {
   private firestore = inject(Firestore);
@@ -30,7 +29,6 @@ export class VotingComponent implements OnInit, OnDestroy {
   protected datadragonService = inject(DatadragonService);
   private championsSubscription?: Subscription;
 
-  championName: string = '';
   isLoading: boolean = false;
   successMessage: string = '';
   errorMessage: string = '';
@@ -103,39 +101,6 @@ export class VotingComponent implements OnInit, OnDestroy {
     ).length;
   }
 
-  async addChampion() {
-    if (!this.championName.trim()) {
-      this.errorMessage = 'Please enter a vote-details name';
-      return;
-    }
-
-    if (!this.currentUser) {
-      this.errorMessage = 'Please sign in to add champions';
-      return;
-    }
-
-    this.isLoading = true;
-    this.errorMessage = '';
-    this.successMessage = '';
-
-    try {
-      const championsCollection = collection(this.firestore, `votingSessions/${this.currentSessionId}/champions`);
-      await addDoc(championsCollection, {
-        name: this.championName.trim(),
-        votes: [], // Array of user IDs
-        createdAt: new Date(),
-        createdBy: this.currentUser.uid
-      });
-
-      this.successMessage = `Champion "${this.championName}" added successfully!`;
-      this.championName = '';
-    } catch (error) {
-      console.error('Error adding vote-details:', error);
-      this.errorMessage = 'Error adding vote-details. Please try again.';
-    } finally {
-      this.isLoading = false;
-    }
-  }
 
   async createNewSession() {
     const timestamp = new Date();

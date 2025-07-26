@@ -1,0 +1,66 @@
+@if (isAdmin) {
+  <div class="card mt-4">
+    <div class="card-header">
+      <h4>Add New Champion</h4>
+    </div>
+    <div class="card-body">
+      <form (ngSubmit)="addChampion()" #championForm="ngForm">
+        <div class="mb-3">
+          <label for="championName" class="form-label">Champion Name</label>
+          <select
+            id="championName"
+            class="form-select"
+            [(ngModel)]="championName"
+            name="championName"
+            required
+            [disabled]="isLoading || availableChampions.length === 0">
+
+            <option value="" disabled>
+              @if (availableChampions.length === 0) {
+                Loading champions...
+              } @else {
+                Select a champion
+              }
+            </option>
+
+            @for (championName of availableChampions; track championName) {
+              <option [value]="championName.name">{{ championName.name }}</option>
+            }
+          </select>
+
+          @if (availableChampions.length === 0) {
+            <small class="form-text text-muted">
+              <i class="fas fa-spinner fa-spin"></i> Loading champion list from League of Legends API...
+            </small>
+          }
+        </div>
+
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="isLoading || !championName || availableChampions.length === 0">
+          @if (isLoading) {
+            <span class="spinner-border spinner-border-sm me-2" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </span>
+          }
+          {{ isLoading ? 'Adding...' : 'Add Champion' }}
+        </button>
+      </form>
+
+      <!-- Success Message -->
+      @if (successMessage) {
+        <div class="alert alert-success mt-3" role="alert">
+          {{ successMessage }}
+        </div>
+      }
+
+      <!-- Error Message -->
+      @if (errorMessage) {
+        <div class="alert alert-danger mt-3" role="alert">
+          {{ errorMessage }}
+        </div>
+      }
+    </div>
+  </div>
+}
