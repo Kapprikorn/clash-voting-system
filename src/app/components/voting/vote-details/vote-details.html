@@ -1,7 +1,8 @@
 <div class="col-md-6 col-lg-4 mb-3">
-  <div class="card h-100 border"
-       [class.border-success]="hasUserVotedForChampion()"
-       [class.bg-light]="hasUserVotedForChampion()">
+  <div
+    class="card h-100 border"
+    [class.border-success]="hasUserVotedForChampion()"
+    [class.bg-light]="hasUserVotedForChampion()">
     <div class="card-body d-flex flex-column">
       <!-- Champion Image and Name -->
       <div class="d-flex align-items-center mb-3">
@@ -46,16 +47,16 @@
           <!-- Vote Button -->
           <button
             class="btn w-100"
-            [class.btn-outline-primary]="user"
-            [class.btn-outline-secondary]="!user"
-            [disabled]="isVoting || !user"
+            [class.btn-outline-primary]="currentUser"
+            [class.btn-outline-secondary]="!currentUser"
+            [disabled]="isVoting || !currentUser"
             (click)="vote(champion.id, champion.name)">
 
             @if (isVoting) {
               <span class="spinner-border spinner-border-sm me-2" role="status"></span>
               Voting...
             } @else {
-              @if (!user) {
+              @if (!currentUser) {
                 <i class="fas fa-lock me-2"></i>Sign in to Vote
               } @else {
                 <i class="fas fa-vote-yea me-2"></i>Vote

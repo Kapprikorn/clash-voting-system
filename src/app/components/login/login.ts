@@ -1,39 +1,27 @@
-import { Component, inject, OnInit, OnDestroy, Output, EventEmitter } from '@angular/core';
-import { Auth, signInWithPopup, GoogleAuthProvider, signOut, User, Unsubscribe } from '@angular/fire/auth';
-import { CommonModule } from '@angular/common';
+import {Component, inject, OnDestroy, OnInit} from '@angular/core';
+import {Auth, GoogleAuthProvider, signInWithPopup, signOut, Unsubscribe, User} from '@angular/fire/auth';
+import {CommonModule} from '@angular/common';
+import {FirebaseService} from '../../services/http/firebase.service';
+import {Observable} from 'rxjs';
 
 @Component({
   selector: 'app-login',
   standalone: true,
   imports: [CommonModule],
-  template: `
-    @if (user) {
-      <div class="logged-in-container">
-        <span>Logged in as: {{ user.displayName }}</span>
-        @if (isAdmin) {
-          <span class="badge bg-warning text-dark ms-2">Admin</span>
-        }
-        <button (click)="logout()" class="logout-btn ms-2">Logout</button>
-      </div>
-    } @else {
-      <button (click)="signInWithGoogle()" class="btn btn-outline-primary">Sign in with Google</button>
-    }
-  `
+  templateUrl: './login.html'
 })
 export class LoginComponent implements OnInit, OnDestroy {
   private auth = inject(Auth);
-
-  @Output() adminStatusChange = new EventEmitter<boolean>();
+  private firebaseService = inject(FirebaseService);
 
   user: User | null = null;
-  isAdmin: boolean = false;
+  isAdmin$: Observable<boolean> = this.firebaseService.isAdmin();
   private authSubscription?: Unsubscribe;
 
   ngOnInit() {
     // Listen to auth state changes
     this.authSubscription = this.auth.onAuthStateChanged((user) => {
       this.user = user;
-      this.checkAdminStatus();
     });
   }
 
@@ -42,11 +30,6 @@ export class LoginComponent implements OnInit, OnDestroy {
     if (this.authSubscription) {
       this.authSubscription();
     }
-  }
-
-  private checkAdminStatus() {
-    this.isAdmin = this.user?.displayName === "Sjors";
-    this.adminStatusChange.emit(this.isAdmin);
   }
 
   signInWithGoogle() {

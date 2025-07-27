@@ -1,10 +1,11 @@
-import {Component, inject, Input, OnInit} from '@angular/core';
+import {Component, inject, Input, OnDestroy, OnInit} from '@angular/core';
 import {NgOptimizedImage} from "@angular/common";
 import {FirebaseChampion} from '../../../models/firebase.models';
 import {FirebaseService} from '../../../services/http/firebase.service';
-import {User} from '@angular/fire/auth';
-import {firstValueFrom} from 'rxjs';
+import {Subscription} from 'rxjs';
 import {DatadragonService} from '../../../services/http/datadragon.service';
+import {SessionService} from '../../../services/session.service';
+import {User} from '@angular/fire/auth';
 
 @Component({
   selector: 'app-vote-details',
@@ -14,14 +15,15 @@ import {DatadragonService} from '../../../services/http/datadragon.service';
   templateUrl: './vote-details.html',
   styleUrl: './vote-details.scss'
 })
-export class VoteDetails implements OnInit {
+export class VoteDetails implements OnInit, OnDestroy {
   private firebaseService = inject(FirebaseService);
   private datadragonService = inject(DatadragonService);
+  private sessionService = inject(SessionService);
+  private subscriptions = new Subscription();
 
   @Input({required: true}) champion!: FirebaseChampion;
-  @Input({required: true}) sessionId!: string;
-  @Input({required: true}) user!: User | null;
 
+  protected currentUser: User | null = null;
   protected isVoting = false;
   protected successMessage: string = '';
   protected errorMessage: string = '';
@@ -29,23 +31,34 @@ export class VoteDetails implements OnInit {
 
   ngOnInit() {
     this.getChampionImageUrl();
+
+    // Subscribe to user changes
+    this.subscriptions.add(
+      this.firebaseService.getCurrentUser().subscribe(user => {
+        this.currentUser = user;
+      })
+    );
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.unsubscribe();
   }
 
   protected hasUserVotedForChampion(): boolean {
-    if (!this.user) return false;
+    if (!this.currentUser) return false;
 
-    return this.champion.votes?.includes(this.user.uid);
+    return this.champion.votes?.includes(this.currentUser.uid) || false;
   }
 
-  async vote(championId: string, championName: string) {
-    if (this.isVoting || !this.user) {
-      if (!this.user) {
+  vote(championId: string, championName: string) {
+    if (this.isVoting || !this.currentUser) {
+      if (!this.currentUser) {
         this.errorMessage = 'Please sign in to vote';
       }
       return;
     }
 
-    // Check if user already voted for this vote-details
+    // Check if user already voted for this champion
     if (this.hasUserVotedForChampion()) {
       this.errorMessage = `You have already voted for ${championName}`;
       setTimeout(() => this.errorMessage = '', 3000);
@@ -55,60 +68,63 @@ export class VoteDetails implements OnInit {
     this.isVoting = true;
     this.errorMessage = '';
 
-    try {
-      await firstValueFrom(this.firebaseService.voteForChampion({
-        sessionId: this.sessionId,
-        championId: championId,
-        userId: this.user.uid
-      }));
-
-      this.successMessage = `Vote cast for ${championName}!`;
-      setTimeout(() => {
-        this.successMessage = '';
-      }, 3000);
-
-    } catch (error) {
-      console.error('Error voting:', error);
-      this.errorMessage = 'Error casting vote. Please try again.';
-    } finally {
-      this.isVoting = false;
-    }
+    this.firebaseService.voteForChampion({
+      sessionId: this.sessionService.getCurrentSessionId(),
+      championId: championId,
+      userId: this.currentUser.uid
+    }).subscribe({
+      next: () => {
+        this.successMessage = `Vote cast for ${championName}!`;
+        setTimeout(() => {
+          this.successMessage = '';
+        }, 3000);
+      },
+      error: (error) => {
+        console.error('Error voting:', error);
+        this.errorMessage = 'Error casting vote. Please try again.';
+      },
+      complete: () => {
+        this.isVoting = false;
+      }
+    });
   }
 
-  async unvote(championId: string, championName: string) {
-    if (!this.user || !this.hasUserVotedForChampion()) return;
+  unvote(championId: string, championName: string) {
+    if (!this.currentUser || !this.hasUserVotedForChampion()) return;
 
     this.isVoting = true;
     this.errorMessage = '';
 
-    try {
-      await firstValueFrom(this.firebaseService.removeVoteForChampion({
-        sessionId: this.sessionId,
-        championId: championId,
-        userId: this.user.uid
-      }));
-
-      this.successMessage = `Vote removed for ${championName}!`;
-      setTimeout(() => {
-        this.successMessage = '';
-      }, 3000);
-
-    } catch (error) {
-      console.error('Error removing vote:', error);
-      this.errorMessage = 'Error removing vote. Please try again.';
-    } finally {
-      this.isVoting = false;
-    }
+    this.firebaseService.removeVoteForChampion({
+      sessionId: this.sessionService.getCurrentSessionId(),
+      championId: championId,
+      userId: this.currentUser.uid
+    }).subscribe({
+      next: () => {
+        this.successMessage = `Vote removed for ${championName}!`;
+        setTimeout(() => {
+          this.successMessage = '';
+        }, 3000);
+      },
+      error: (error) => {
+        console.error('Error removing vote:', error);
+        this.errorMessage = 'Error removing vote. Please try again.';
+      },
+      complete: () => {
+        this.isVoting = false;
+      }
+    });
   }
 
-  private async getChampionImageUrl(): Promise<void> {
-    try {
-      this.championImageUrl = await firstValueFrom(
-        this.datadragonService.getChampionImageUrlByName(this.champion.name)
-      );
-    } catch (error) {
-      console.error('Error loading champion image:', error);
-      this.championImageUrl = undefined;
-    }
+  private getChampionImageUrl(): void {
+    this.datadragonService.getChampionImageUrlByName(this.champion.name).subscribe({
+      next: (imageUrl) => {
+        this.championImageUrl = imageUrl;
+      },
+      error: (error) => {
+        console.error('Error loading champion image:', error);
+        this.championImageUrl = undefined;
+      }
+    });
   }
 }

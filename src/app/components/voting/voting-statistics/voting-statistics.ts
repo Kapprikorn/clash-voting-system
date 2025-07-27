@@ -1,6 +1,8 @@
-import {Component, Input} from '@angular/core';
+import {Component, inject} from '@angular/core';
 import {User} from '@angular/fire/auth';
 import {FirebaseChampion} from '../../../models/firebase.models';
+import {FirebaseService} from '../../../services/http/firebase.service';
+import {SessionService} from '../../../services/session.service';
 
 @Component({
   selector: 'app-voting-statistics',
@@ -9,8 +11,18 @@ import {FirebaseChampion} from '../../../models/firebase.models';
   styleUrl: './voting-statistics.scss'
 })
 export class VotingStatistics {
-  @Input({required: true}) champions!: FirebaseChampion[];
-  @Input({required: true}) user!: User | null;
+  private firebaseService = inject(FirebaseService);
+  private sessionService = inject(SessionService);
+
+  protected user: User | null;
+  protected champions: FirebaseChampion[] = [];
+
+  constructor() {
+    this.user = this.sessionService.getCurrentUser();
+    this.firebaseService.getChampions(this.sessionService.getCurrentSessionId()).subscribe({
+      next: value => this.champions = value,
+    });
+  }
 
   protected getTotalVotes(): number {
     return this.champions.reduce((total, champion) => total + (champion.votes.length || 0), 0);

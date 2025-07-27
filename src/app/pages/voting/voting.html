@@ -7,17 +7,10 @@
     </div>
   }
 
-  <app-login (adminStatusChange)="onAdminStatusChange($event)" />
-
-  <!-- Login Required Message -->
-  @if (!currentUser) {
-    <div class="alert alert-warning mt-4">
-      <i class="fas fa-sign-in-alt"></i> Please sign in to vote and participate in the poll!
-    </div>
-  }
+  <app-login />
 
   <!-- User Vote Summary -->
-  @if (currentUser && getUserVoteCount() > 0) {
+  @if ((user$ | async) && getUserVoteCount() > 0) {
     <div class="alert alert-success mt-4">
       <i class="fas fa-check-circle"></i> You have voted for <strong>{{ getUserVoteCount() }}</strong> champion(s).
                                           You can vote once per champion!
@@ -25,19 +18,14 @@
   }
 
   <!-- Admin Controls -->
-  <app-admin-section [isAdmin]="isAdmin"/>
+  <app-admin-section />
 
   <!-- Add Champion -->
-  <app-add-champion-section [user]="currentUser"
-                            [availableChampions]="availableChampions"
-                            [sessionId]="currentSessionId"
-                            [isAdmin]="isAdmin"
-                            [isLoading]="isLoading"
+  <app-add-champion-section
+    [availableChampions]="availableChampions"
+    [isLoading]="isLoading"
   />
 
   <!-- Voting Section -->
-  <app-voting-section [champions]="champions"
-                      [user]="currentUser"
-                      [sessionId]="currentSessionId"
-  />
+  <app-voting-section />
 </div>

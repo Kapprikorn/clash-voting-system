@@ -1,14 +1,14 @@
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { LoginComponent } from '../../components/login/login';
-import { Subscription } from 'rxjs';
-import { DataDragonChampion, DatadragonService } from '../../services/http/datadragon.service';
-import { VotingSection } from '../../components/voting/voting-section/voting-section';
-import { AddChampionSection } from '../../components/champion/add-champion-section/add-champion-section';
-import { AdminSection } from '../../components/admin/admin-section/admin-section';
-import { SessionService, Champion } from '../../services/session.service';
-import { User } from '@angular/fire/auth';
+import {Component, inject, OnDestroy, OnInit} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {FormsModule} from '@angular/forms';
+import {LoginComponent} from '../../components/login/login';
+import {Observable, Subscription} from 'rxjs';
+import {DataDragonChampion, DatadragonService} from '../../services/http/datadragon.service';
+import {VotingSection} from '../../components/voting/voting-section/voting-section';
+import {AddChampionSection} from '../../components/champion/add-champion-section/add-champion-section';
+import {AdminSection} from '../../components/admin/admin-section/admin-section';
+import {Champion, SessionService} from '../../services/session.service';
+import {User} from '@angular/fire/auth';
 
 @Component({
   selector: 'app-voting',
@@ -27,9 +27,9 @@ export class VotingComponent implements OnInit, OnDestroy {
   errorMessage: string = '';
   currentSessionId: string = '';
   champions: Champion[] = [];
-  isAdmin: boolean = false;
-  currentUser: User | null = null;
   availableChampions: DataDragonChampion[] = [];
+
+  user$: Observable<User | null> = this.sessionService.currentUser$;
 
   async ngOnInit() {
     // Subscribe to session service observables
@@ -42,12 +42,6 @@ export class VotingComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.sessionService.champions$.subscribe(champions => {
         this.champions = champions;
-      })
-    );
-
-    this.subscriptions.add(
-      this.sessionService.currentUser$.subscribe(user => {
-        this.currentUser = user;
       })
     );
 
@@ -65,10 +59,6 @@ export class VotingComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.subscriptions.unsubscribe();
     this.sessionService.destroy();
-  }
-
-  onAdminStatusChange(isAdmin: boolean) {
-    this.isAdmin = isAdmin;
   }
 
   getUserVoteCount(): number {

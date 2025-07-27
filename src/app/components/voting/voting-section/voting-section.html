@@ -9,14 +9,12 @@
         @for (champion of champions; track champion.id) {
           <app-vote-details
             [champion]="champion"
-            [sessionId]="sessionId"
-            [user]="user"
           />
         }
       </div>
 
       <!-- Rest of your voting statistics section remains the same -->
-      <app-voting-statistics [champions]="champions" [user]="user" />
+      <app-voting-statistics />
     </div>
   </div>
 } @else {

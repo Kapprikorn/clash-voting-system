@@ -1,4 +1,4 @@
-@if (isAdmin) {
+@if (isAdmin$ | async) {
   <div class="card mt-4">
     <div class="card-header">
       <h4>Add New Champion</h4>
@@ -44,7 +44,11 @@
               <span class="visually-hidden">Loading...</span>
             </span>
           }
-          {{ isLoading ? 'Adding...' : 'Add Champion' }}
+          {{
+            isLoading
+            ? 'Adding...'
+            : 'Add Champion'
+          }}
         </button>
       </form>
 

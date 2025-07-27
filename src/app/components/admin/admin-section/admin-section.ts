@@ -1,6 +1,8 @@
-import { Component, Input, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { SessionService } from '../../../services/session.service';
+import {Component, inject} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {SessionService} from '../../../services/session.service';
+import {FirebaseService} from '../../../services/http/firebase.service';
+import {Observable} from 'rxjs';
 
 @Component({
   selector: 'app-admin-section',
@@ -10,13 +12,13 @@ import { SessionService } from '../../../services/session.service';
   styleUrl: './admin-section.scss'
 })
 export class AdminSection {
-  @Input({ required: true }) isAdmin!: boolean;
-
   private sessionService = inject(SessionService);
+  private firebaseService = inject(FirebaseService);
 
   isLoading: boolean = false;
   errorMessage: string = '';
   successMessage: string = '';
+  isAdmin$: Observable<boolean> = this.firebaseService.isAdmin();
 
   protected async clearAllChampions() {
     if (!confirm('This will start a new voting session. All current votes will be archived. Continue?')) {
