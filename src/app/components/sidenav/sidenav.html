@@ -1,0 +1,8 @@
+@if (currentSession$ | async; as session) {
+  <div class="alert alert-info session-info">
+    <strong style="text-wrap: nowrap">Current Session:</strong>
+    <span>{{ session.createdAt | date }}</span>
+  </div>
+}
+
+<app-login />

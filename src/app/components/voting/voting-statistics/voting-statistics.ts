@@ -20,8 +20,8 @@ export class VotingStatistics {
   protected user$ = this.firebaseService.getCurrentUser();
 
   protected champions$ = this.sessionService.currentSession$.pipe(
-    filter(sessionId => !!sessionId),
-    switchMap(sessionId => this.firebaseService.getChampions(sessionId))
+    filter(session => !!session),
+    switchMap(session => this.firebaseService.getChampions(session.sessionId))
   );
 
   // Computed statistics

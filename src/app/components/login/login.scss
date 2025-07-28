@@ -1,0 +1,19 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.logged-in-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: fit-content;
+}
+
+@media screen and (width < 600px) {
+  :host, .logged-in-container {
+    flex-direction: row;
+  }
+}

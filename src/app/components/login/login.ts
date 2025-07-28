@@ -3,12 +3,17 @@ import {Auth, GoogleAuthProvider, signInWithPopup, signOut, Unsubscribe, User} f
 import {CommonModule} from '@angular/common';
 import {FirebaseService} from '../../services/http/firebase.service';
 import {Observable} from 'rxjs';
+import {MatButtonModule} from '@angular/material/button';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule],
-  templateUrl: './login.html'
+  imports: [
+    CommonModule,
+    MatButtonModule
+  ],
+  templateUrl: './login.html',
+  styleUrl: './login.scss'
 })
 export class LoginComponent implements OnInit, OnDestroy {
   private auth = inject(Auth);

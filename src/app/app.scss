@@ -1,0 +1,33 @@
+:host {
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+  height: 100dvh;
+  width: 100dvw
+}
+
+.sidenav {
+  flex: 0 0 auto;
+  overflow-y: auto;
+  background-color: var(--mat-sys-surface);
+  border-right: 1px solid var(--mat-sys-outline);
+}
+
+main {
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+@media screen and (width < 600px) {
+  :host {
+    flex-direction: column;
+  }
+
+  .sidenav {
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-right: 0;
+    border-bottom: 1px solid var(--mat-sys-outline);
+  }
+}
+

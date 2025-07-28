@@ -1,7 +1,6 @@
 import {Component, inject, OnDestroy, OnInit} from '@angular/core';
 import {AsyncPipe, CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
-import {LoginComponent} from '../../components/login/login';
 import {catchError, combineLatest, map, of, Subscription} from 'rxjs';
 import {DatadragonService} from '../../services/http/datadragon.service';
 import {VotingSection} from '../../components/voting/voting-section/voting-section';
@@ -14,7 +13,7 @@ import {SessionService} from '../../services/session.service';
   templateUrl: './voting.html',
   styleUrls: ['./voting.scss'],
   standalone: true,
-  imports: [FormsModule, CommonModule, AsyncPipe, LoginComponent, VotingSection, AddChampionSection, AdminSection]
+  imports: [FormsModule, CommonModule, AsyncPipe, VotingSection, AddChampionSection, AdminSection]
 })
 export class VotingComponent implements OnInit, OnDestroy {
   private datadragonService = inject(DatadragonService);
@@ -23,7 +22,6 @@ export class VotingComponent implements OnInit, OnDestroy {
 
   // Reactive data streams
   protected user$ = this.sessionService.currentUser$;
-  protected currentSession$ = this.sessionService.currentSession$;
 
   protected userVoteCount$ = combineLatest([
     this.user$,

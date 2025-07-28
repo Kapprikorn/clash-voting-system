@@ -1,14 +1,15 @@
 @if (user) {
   <div class="logged-in-container">
-    <span>Logged in as: {{ user.displayName }}</span>
+    <span>{{ user.displayName }}</span>
     @if (isAdmin$ | async) {
-      <span class="badge bg-warning text-dark ms-2">Admin</span>
+      <span class="badge bg-warning text-dark">Admin</span>
     }
-    <button (click)="logout()" class="logout-btn ms-2">Logout</button>
+    <button matButton="filled" (click)="logout()">
+      Logout
+    </button>
   </div>
 } @else {
-  <button (click)="signInWithGoogle()" class="btn btn-outline-primary">Sign in with Google</button>
-  <div class="alert alert-warning mt-4">
-    <i class="fas fa-sign-in-alt"></i> Please sign in to vote and participate in the poll!
-  </div>
+  <button matButton="filled" (click)="signInWithGoogle()">
+    Google login
+  </button>
 }

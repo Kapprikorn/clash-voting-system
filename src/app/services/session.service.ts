@@ -1,5 +1,5 @@
 import {inject, Injectable} from '@angular/core';
-import {doc, Firestore, getDoc, setDoc} from '@angular/fire/firestore';
+import {collection, doc, Firestore, getDocs, limit, orderBy, query, setDoc} from '@angular/fire/firestore';
 import {Auth, User} from '@angular/fire/auth';
 import {BehaviorSubject, filter, Subscription, switchMap} from 'rxjs';
 import {FirebaseChampion} from '../models/firebase.models';
@@ -28,7 +28,7 @@ export class SessionService {
   private auth = inject(Auth);
   private firebaseService = inject(FirebaseService);
 
-  private currentSessionSubject = new BehaviorSubject<string>('');
+  private currentSessionSubject = new BehaviorSubject<SessionInfo | null>(null);
   private championsSubject = new BehaviorSubject<Champion[]>([]);
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   private championsSubscription?: Subscription;
@@ -52,7 +52,8 @@ export class SessionService {
    * Get the current session ID
    */
   getCurrentSessionId(): string {
-    return this.currentSessionSubject.value;
+    const currentSession = this.currentSessionSubject.value;
+    return currentSession?.sessionId || '';
   }
 
   /**
@@ -77,26 +78,6 @@ export class SessionService {
   }
 
   /**
-   * Load the current active session from Firestore
-   */
-  async loadCurrentSession(): Promise<void> {
-    try {
-      const currentSessionDoc = doc(this.firestore, 'settings/currentSession');
-      const docSnap = await getDoc(currentSessionDoc);
-
-      if (docSnap.exists()) {
-        const sessionId = docSnap.data()['sessionId'];
-        this.currentSessionSubject.next(sessionId);
-      } else {
-        await this.createNewSession();
-      }
-    } catch (error) {
-      console.error('Error loading current session:', error);
-      throw error;
-    }
-  }
-
-  /**
    * Create a new voting session
    */
   async createNewSession(): Promise<string> {
@@ -104,27 +85,52 @@ export class SessionService {
     const sessionId = `session_${timestamp.getFullYear()}-${String(timestamp.getMonth() + 1).padStart(2, '0')}-${String(timestamp.getDate()).padStart(2, '0')}_${String(timestamp.getHours()).padStart(2, '0')}-${String(timestamp.getMinutes()).padStart(2, '0')}-${String(timestamp.getSeconds()).padStart(2, '0')}`;
 
     try {
-      // Update current session reference
-      const currentSessionDoc = doc(this.firestore, 'settings/currentSession');
-      await setDoc(currentSessionDoc, {
-        sessionId: sessionId,
-        createdAt: timestamp
-      });
-
-      // Create the new session document
-      const sessionDoc = doc(this.firestore, `votingSessions/${sessionId}`);
-      await setDoc(sessionDoc, {
+      // Create only the session document
+      const session: SessionInfo = {
         createdAt: timestamp,
-        status: 'active'
-      });
+        status: 'active',
+        sessionId: sessionId
+      }
+      const sessionDoc = doc(this.firestore, `votingSessions/${sessionId}`);
+      await setDoc(sessionDoc, session);
 
-      this.currentSessionSubject.next(sessionId);
+      this.currentSessionSubject.next(session);
       this.championsSubject.next([]); // Clear champions for new session
 
       return sessionId;
     } catch (error) {
       console.error('Error creating new session:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Load the most recent session (by createdAt timestamp)
+   */
+  private async loadCurrentSession(): Promise<void> {
+    try {
+      const sessionsQuery = query(
+        collection(this.firestore, 'votingSessions'),
+        orderBy('createdAt', 'desc'),
+        limit(1)
+      );
+
+      const snapshot = await getDocs(sessionsQuery);
+      if (!snapshot.empty) {
+        const sessionDoc = snapshot.docs[0];
+        const data = sessionDoc.data();
+        const session: SessionInfo = {
+          sessionId: sessionDoc.id, // Use the document ID, not data['sessionId']
+          createdAt: data['createdAt'].toDate(), // Convert Firestore timestamp to Date
+          status: data['status']
+        };
+        this.currentSessionSubject.next(session);
+      } else {
+        this.currentSessionSubject.next(null);
+      }
+    } catch (error) {
+      console.error('Error loading current session:', error);
+      this.currentSessionSubject.next(null);
     }
   }
 
@@ -138,8 +144,8 @@ export class SessionService {
     }
 
     this.championsSubscription = this.currentSession$.pipe(
-      filter(sessionId => !!sessionId),
-      switchMap(sessionId => this.firebaseService.getChampions(sessionId))
+      filter(session => !!session),
+      switchMap(session => this.firebaseService.getChampions(session.sessionId))
     ).subscribe(champions => {
       // Transform FirebaseChampion to Champion with voteCount and sorting
       const transformedChampions: Champion[] = champions.map(champion => ({

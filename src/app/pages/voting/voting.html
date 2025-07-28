@@ -1,13 +1,5 @@
 <div class="container mt-4">
-  <h2>League of Legends Champion Voting</h2>
-
-  @if (currentSession$ | async; as sessionId) {
-    <div class="alert alert-info">
-      <strong>Current Session:</strong> {{ sessionId }}
-    </div>
-  }
-
-  <app-login />
+  <h2 style="text-wrap: balance">League of Legends Champion Voting</h2>
 
   <!-- User Vote Summary -->
   @if (user$ | async) {
