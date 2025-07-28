@@ -136,7 +136,7 @@ export class FirebaseService {
   getChampions(sessionId: string): Observable<FirebaseChampion[]> {
     if (!sessionId) throw new Error("no sessionId given");
     const championsCollection = collection(this.firestore, `votingSessions/${sessionId}/champions`);
-    const q = query(championsCollection, orderBy('voteCount', 'desc'));
+    const q = query(championsCollection);
 
     return new Observable(observer => {
       const unsubscribe = onSnapshot(q, snapshot => {

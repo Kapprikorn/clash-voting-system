@@ -1,5 +1,6 @@
 export interface Settings {
   id?: string;
+
   [key: string]: any; // Flexible settings object
 }
 

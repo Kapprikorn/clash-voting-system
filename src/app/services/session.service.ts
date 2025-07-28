@@ -1,8 +1,9 @@
 import {inject, Injectable} from '@angular/core';
-import {collection, doc, Firestore, getDoc, onSnapshot, setDoc, Unsubscribe} from '@angular/fire/firestore';
+import {doc, Firestore, getDoc, setDoc} from '@angular/fire/firestore';
 import {Auth, User} from '@angular/fire/auth';
-import {BehaviorSubject} from 'rxjs';
+import {BehaviorSubject, filter, Subscription, switchMap} from 'rxjs';
 import {FirebaseChampion} from '../models/firebase.models';
+import {FirebaseService} from './http/firebase.service';
 
 export interface Champion extends FirebaseChampion {
   id: string;
@@ -25,11 +26,12 @@ export interface SessionInfo {
 export class SessionService {
   private firestore = inject(Firestore);
   private auth = inject(Auth);
+  private firebaseService = inject(FirebaseService);
 
   private currentSessionSubject = new BehaviorSubject<string>('');
   private championsSubject = new BehaviorSubject<Champion[]>([]);
   private currentUserSubject = new BehaviorSubject<User | null>(null);
-  private championsUnsubscribe?: Unsubscribe;
+  private championsSubscription?: Subscription;
 
   // Public observables
   public currentSession$ = this.currentSessionSubject.asObservable();
@@ -41,6 +43,9 @@ export class SessionService {
     this.auth.onAuthStateChanged((user) => {
       this.currentUserSubject.next(user);
     });
+
+    // Set up champions listener when session changes
+    this.setupChampionsListener();
   }
 
   /**
@@ -115,7 +120,6 @@ export class SessionService {
 
       this.currentSessionSubject.next(sessionId);
       this.championsSubject.next([]); // Clear champions for new session
-      this.loadChampions(sessionId); // Start listening to the new session's champions
 
       return sessionId;
     } catch (error) {
@@ -125,36 +129,42 @@ export class SessionService {
   }
 
   /**
-   * Load and listen to champions for the current session
+   * Set up champions listener using FirebaseService
    */
-  private loadChampions(sessionId: string): void {
-    // Unsubscribe from previous listener if exists
-    if (this.championsUnsubscribe) {
-      this.championsUnsubscribe();
+  private setupChampionsListener(): void {
+    // Clean up previous subscription
+    if (this.championsSubscription) {
+      this.championsSubscription.unsubscribe();
     }
 
-    const championsRef = collection(this.firestore, `votingSessions/${sessionId}/champions`);
+    this.championsSubscription = this.currentSession$.pipe(
+      filter(sessionId => !!sessionId),
+      switchMap(sessionId => this.firebaseService.getChampions(sessionId))
+    ).subscribe(champions => {
+      // Transform FirebaseChampion to Champion with voteCount and sorting
+      const transformedChampions: Champion[] = champions.map(champion => ({
+        ...champion,
+        voteCount: champion.votes?.length || 0
+      } as Champion)).sort((a, b) => {
+        // Primary sort: by voteCount (descending - highest votes first)
+        if (b.voteCount !== a.voteCount) {
+          return b.voteCount - a.voteCount;
+        }
+        // Secondary sort: by name (ascending - alphabetical order)
+        return a.name.localeCompare(b.name);
+      });
 
-    this.championsUnsubscribe = onSnapshot(championsRef, (snapshot) => {
-      const champions: Champion[] = snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          ...data,
-          voteCount: data['votes']?.length || 0
-        } as Champion;
-      }).sort((a, b) => b.voteCount - a.voteCount);
-
-      this.championsSubject.next(champions);
+      this.championsSubject.next(transformedChampions);
     });
   }
+
 
   /**
    * Clean up subscriptions
    */
   destroy(): void {
-    if (this.championsUnsubscribe) {
-      this.championsUnsubscribe();
+    if (this.championsSubscription) {
+      this.championsSubscription.unsubscribe();
     }
   }
 }

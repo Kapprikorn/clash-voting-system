@@ -28,7 +28,6 @@ export class AddChampionSection implements OnInit {
   private firebaseService = inject(FirebaseService);
   private sessionService = inject(SessionService);
 
-  protected championName: string = '';
   protected successMessage: string = '';
   protected errorMessage: string = '';
   protected championControl = new FormControl();
@@ -43,14 +42,16 @@ export class AddChampionSection implements OnInit {
       startWith(''),
       map(value => {
         const name = typeof value === 'string' ? value : value?.name;
-        console.log('this.availableChampions', this.availableChampions);
         return name ? this._filter(name as string) : this.availableChampions.slice();
       })
     );
   }
 
   protected addChampion() {
-    if (!this.championName.trim()) {
+    const championValue = this.championControl.value;
+    const championName = typeof championValue === 'string' ? championValue : championValue?.name;
+
+    if (!championName?.trim()) {
       this.errorMessage = 'Please enter a champion name';
       this.successMessage = '';
       return;
@@ -62,11 +63,19 @@ export class AddChampionSection implements OnInit {
 
     const currentSessionId = this.sessionService.getCurrentSessionId();
     this.firebaseService.createChampion(currentSessionId, {
-      name: this.championName.trim()
+      name: championName.trim()
     }).subscribe({
       next: () => {
-        this.successMessage = `Champion "${this.championName}" added successfully!`;
-        this.championName = '';
+        this.successMessage = `Champion "${championName}" added successfully!`;
+        this.championControl.setValue(''); // Clear the form control
+        this.championControl.markAsUntouched(); // Reset touched state
+        this.championControl.markAsPristine(); // Reset dirty state
+
+        // Clear any validation errors
+        this.championControl.setErrors(null);
+
+        // Clear error message in case there was one before
+        this.errorMessage = '';
       },
       error: (error) => {
         console.error('Error adding champion:', error);
@@ -81,8 +90,24 @@ export class AddChampionSection implements OnInit {
 
   private _filter(name: string): any[] {
     const filterValue = name.toLowerCase();
-    return this.availableChampions.filter(champion =>
-      champion.name.toLowerCase().includes(filterValue)
-    );
+    return this.availableChampions.filter(champion => {
+      const championName = champion.name.toLowerCase();
+      return this._isSubsequence(filterValue, championName);
+    });
+  }
+
+  private _isSubsequence(filter: string, championName: string): boolean {
+    let filterIndex = 0;
+    let championIndex = 0;
+
+    while (filterIndex < filter.length && championIndex < championName.length) {
+      if (filter[filterIndex] === championName[championIndex]) {
+        filterIndex++;
+      }
+      championIndex++;
+    }
+
+    // Return true if we've matched all characters in the filter
+    return filterIndex === filter.length;
   }
 }

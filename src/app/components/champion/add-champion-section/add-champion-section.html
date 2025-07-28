@@ -18,11 +18,9 @@
             <input
               matInput
               id="championName"
-              [(ngModel)]="championName"
-              name="championName"
+              [formControl]="championControl"
               required
               [matAutocomplete]="championAuto"
-              [disabled]="isLoading || availableChampions.length === 0"
               placeholder="Type to search champions...">
             <mat-autocomplete
               #championAuto="matAutocomplete"
@@ -47,7 +45,7 @@
         <button
           type="submit"
           class="btn btn-primary"
-          [disabled]="isLoading || !championName || availableChampions.length === 0">
+          [disabled]="isLoading || !championControl.value || availableChampions.length === 0">
           @if (isLoading) {
             <span class="spinner-border spinner-border-sm me-2" role="status">
               <span class="visually-hidden">Loading...</span>
