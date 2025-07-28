@@ -5,6 +5,9 @@
 // custom components at https://material.angular.dev/guide/theming
 @use '@angular/material' as mat;
 
+// Import Bootstrap CSS
+@import '../node_modules/bootstrap/scss/bootstrap';
+
 html {
   @include mat.theme((
     color: (

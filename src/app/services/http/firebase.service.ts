@@ -1,21 +1,21 @@
-import { Injectable, inject } from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {
-  Firestore,
-  collection,
-  doc,
   addDoc,
-  updateDoc,
-  deleteDoc,
-  query,
-  orderBy,
-  onSnapshot,
-  arrayUnion,
   arrayRemove,
+  arrayUnion,
+  collection,
+  deleteDoc,
+  doc,
   DocumentReference,
+  Firestore,
+  onSnapshot,
+  orderBy,
+  query,
+  updateDoc,
 } from '@angular/fire/firestore';
-import { Auth, authState } from '@angular/fire/auth';
-import { Observable, from, map } from 'rxjs';
-import { Settings, VotingSession, FirebaseChampion, VoteRequest } from '../../models/firebase.models';
+import {Auth, authState} from '@angular/fire/auth';
+import {from, map, Observable} from 'rxjs';
+import {FirebaseChampion, Settings, VoteRequest, VotingSession} from '../../models/firebase.models';
 
 @Injectable({
   providedIn: 'root'
@@ -28,7 +28,8 @@ export class FirebaseService {
   private settingsCollection = collection(this.firestore, 'settings');
   private votingSessionsCollection = collection(this.firestore, 'votingSessions');
 
-  constructor() {}
+  constructor() {
+  }
 
   // Settings methods
   getSettings(): Observable<Settings[]> {
@@ -50,7 +51,7 @@ export class FirebaseService {
     return new Observable(observer => {
       const unsubscribe = onSnapshot(settingDoc, snapshot => {
         if (snapshot.exists()) {
-          observer.next({ id: snapshot.id, ...snapshot.data() } as Settings);
+          observer.next({id: snapshot.id, ...snapshot.data()} as Settings);
         } else {
           observer.next(null);
         }
@@ -119,7 +120,7 @@ export class FirebaseService {
 
   updateVotingSession(sessionId: string, data: Partial<VotingSession>): Observable<void> {
     const sessionDoc = doc(this.firestore, 'votingSessions', sessionId);
-    const updateData = { ...data };
+    const updateData = {...data};
     if (updateData.endDate) {
       updateData.endDate = new Date(updateData.endDate);
     }
@@ -133,6 +134,7 @@ export class FirebaseService {
 
   // Champions methods
   getChampions(sessionId: string): Observable<FirebaseChampion[]> {
+    if (!sessionId) throw new Error("no sessionId given");
     const championsCollection = collection(this.firestore, `votingSessions/${sessionId}/champions`);
     const q = query(championsCollection, orderBy('voteCount', 'desc'));
 
@@ -180,7 +182,7 @@ export class FirebaseService {
 
   updateChampion(sessionId: string, championId: string, data: Partial<FirebaseChampion>): Observable<void> {
     const championDoc = doc(this.firestore, `votingSessions/${sessionId}/champions`, championId);
-    const updateData = { ...data };
+    const updateData = {...data};
     delete updateData.id;
     return from(updateDoc(championDoc, updateData));
   }
