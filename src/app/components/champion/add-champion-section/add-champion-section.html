@@ -1,75 +1,77 @@
-<div class="card mt-4">
-  <div class="card-header">
-    <h4>Add New Champion</h4>
+@if (user$ | async) {
+  <div class="card mt-4">
+    <div class="card-header">
+      <h4>Add New Champion</h4>
+    </div>
+    <div class="card-body">
+      <form (ngSubmit)="addChampion()" #championForm="ngForm">
+        <div class="mb-3">
+          <label for="championName" class="form-label">Champion Name</label>
+          <mat-form-field class="w-100">
+            <mat-label>
+              @if (availableChampions.length === 0) {
+                Loading champions...
+              } @else {
+                Select a champion
+              }
+            </mat-label>
+            <input
+              matInput
+              id="championName"
+              [formControl]="championControl"
+              required
+              [matAutocomplete]="championAuto"
+              placeholder="Type to search champions...">
+            <mat-autocomplete
+              #championAuto="matAutocomplete"
+              [displayWith]="displayChampionName"
+              autoActiveFirstOption
+            >
+              @for (champion of filteredChampions | async; track champion.name) {
+                <mat-option [value]="champion">
+                  {{ champion.name }}
+                </mat-option>
+              }
+            </mat-autocomplete>
+          </mat-form-field>
+
+          @if (availableChampions.length === 0) {
+            <small class="form-text text-muted">
+              <i class="fas fa-spinner fa-spin"></i> Loading champion list from League of Legends API...
+            </small>
+          }
+        </div>
+
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="isLoading || !championControl.value || availableChampions.length === 0">
+          @if (isLoading) {
+            <span class="spinner-border spinner-border-sm me-2" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </span>
+          }
+          {{
+            isLoading
+            ? 'Adding...'
+            : 'Add Champion'
+          }}
+        </button>
+      </form>
+
+      <!-- Success Message -->
+      @if (successMessage) {
+        <div class="alert alert-success mt-3" role="alert">
+          {{ successMessage }}
+        </div>
+      }
+
+      <!-- Error Message -->
+      @if (errorMessage) {
+        <div class="alert alert-danger mt-3" role="alert">
+          {{ errorMessage }}
+        </div>
+      }
+    </div>
   </div>
-  <div class="card-body">
-    <form (ngSubmit)="addChampion()" #championForm="ngForm">
-      <div class="mb-3">
-        <label for="championName" class="form-label">Champion Name</label>
-        <mat-form-field class="w-100">
-          <mat-label>
-            @if (availableChampions.length === 0) {
-              Loading champions...
-            } @else {
-              Select a champion
-            }
-          </mat-label>
-          <input
-            matInput
-            id="championName"
-            [formControl]="championControl"
-            required
-            [matAutocomplete]="championAuto"
-            placeholder="Type to search champions...">
-          <mat-autocomplete
-            #championAuto="matAutocomplete"
-            [displayWith]="displayChampionName"
-            autoActiveFirstOption
-          >
-            @for (champion of filteredChampions | async; track champion.name) {
-              <mat-option [value]="champion">
-                {{ champion.name }}
-              </mat-option>
-            }
-          </mat-autocomplete>
-        </mat-form-field>
-
-        @if (availableChampions.length === 0) {
-          <small class="form-text text-muted">
-            <i class="fas fa-spinner fa-spin"></i> Loading champion list from League of Legends API...
-          </small>
-        }
-      </div>
-
-      <button
-        type="submit"
-        class="btn btn-primary"
-        [disabled]="isLoading || !championControl.value || availableChampions.length === 0">
-        @if (isLoading) {
-          <span class="spinner-border spinner-border-sm me-2" role="status">
-            <span class="visually-hidden">Loading...</span>
-          </span>
-        }
-        {{
-          isLoading
-          ? 'Adding...'
-          : 'Add Champion'
-        }}
-      </button>
-    </form>
-
-    <!-- Success Message -->
-    @if (successMessage) {
-      <div class="alert alert-success mt-3" role="alert">
-        {{ successMessage }}
-      </div>
-    }
-
-    <!-- Error Message -->
-    @if (errorMessage) {
-      <div class="alert alert-danger mt-3" role="alert">
-        {{ errorMessage }}
-      </div>
-    }
-  </div>
-</div>
+}
