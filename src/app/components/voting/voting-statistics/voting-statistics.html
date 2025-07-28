@@ -2,16 +2,16 @@
   <h6>Voting Statistics</h6>
   <div class="row text-center">
     <div class="col">
-      <div class="h4 mb-0 text-primary">{{ getTotalVotes() }}</div>
+      <div class="h4 mb-0 text-primary">{{ totalVotes$ | async }}</div>
       <small class="text-muted">Total Votes</small>
     </div>
     <div class="col">
-      <div class="h4 mb-0 text-success">{{ getLeadingChampion()?.name || 'None' }}</div>
+      <div class="h4 mb-0 text-success">{{ (leadingChampion$ | async)?.name || 'None' }}</div>
       <small class="text-muted">Leading Champion</small>
     </div>
-    @if (user) {
+    @if (user$ | async) {
       <div class="col">
-        <div class="h4 mb-0 text-info">{{ getUserVoteCount() }}</div>
+        <div class="h4 mb-0 text-info">{{ userVoteCount$ | async }}</div>
         <small class="text-muted">Your Votes</small>
       </div>
     }

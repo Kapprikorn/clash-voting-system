@@ -1,5 +1,5 @@
 import {Component, inject, Input, OnDestroy, OnInit} from '@angular/core';
-import {NgOptimizedImage} from "@angular/common";
+import {CommonModule, NgOptimizedImage} from "@angular/common";
 import {FirebaseChampion} from '../../../models/firebase.models';
 import {FirebaseService} from '../../../services/http/firebase.service';
 import {Subscription} from 'rxjs';
@@ -11,6 +11,7 @@ import {User} from '@angular/fire/auth';
   selector: 'app-vote-details',
   imports: [
     NgOptimizedImage,
+    CommonModule
   ],
   templateUrl: './vote-details.html',
   styleUrl: './vote-details.scss'

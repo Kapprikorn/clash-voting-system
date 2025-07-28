@@ -1,21 +1,27 @@
-import {Component, inject, Input} from '@angular/core';
-import {FormsModule, ReactiveFormsModule} from "@angular/forms";
+import {Component, inject, Input, OnInit} from '@angular/core';
+import {FormControl, FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {FirebaseService} from '../../../services/http/firebase.service';
-import {combineLatest, map} from 'rxjs';
+import {map, Observable, startWith} from 'rxjs';
 import {AsyncPipe} from '@angular/common';
 import {SessionService} from '../../../services/session.service';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatAutocompleteModule} from '@angular/material/autocomplete';
+import {MatInputModule} from '@angular/material/input';
 
 @Component({
   selector: 'app-add-champion-section',
   imports: [
     FormsModule,
     ReactiveFormsModule,
-    AsyncPipe
+    AsyncPipe,
+    MatFormFieldModule,
+    MatAutocompleteModule,
+    MatInputModule,
   ],
   templateUrl: './add-champion-section.html',
   styleUrl: './add-champion-section.scss'
 })
-export class AddChampionSection {
+export class AddChampionSection implements OnInit {
   @Input({required: true}) isLoading!: boolean;
   @Input({required: true}) availableChampions: any[] = [];
 
@@ -25,21 +31,25 @@ export class AddChampionSection {
   protected championName: string = '';
   protected successMessage: string = '';
   protected errorMessage: string = '';
-  protected sessionId = this.sessionService.getCurrentSessionId();
+  protected championControl = new FormControl();
+  protected filteredChampions: Observable<any[]> = new Observable();
 
   // Combined observables for template usage
   protected user$ = this.firebaseService.getCurrentUser();
   protected isAdmin$ = this.firebaseService.isAdmin();
 
-  // Check if user can add champions (is logged in and is admin)
-  canAddChampion$ = combineLatest([
-    this.user$,
-    this.isAdmin$
-  ]).pipe(
-    map(([user, isAdmin]) => !!user && isAdmin)
-  );
+  ngOnInit() {
+    this.filteredChampions = this.championControl.valueChanges.pipe(
+      startWith(''),
+      map(value => {
+        const name = typeof value === 'string' ? value : value?.name;
+        console.log('this.availableChampions', this.availableChampions);
+        return name ? this._filter(name as string) : this.availableChampions.slice();
+      })
+    );
+  }
 
-  addChampion() {
+  protected addChampion() {
     if (!this.championName.trim()) {
       this.errorMessage = 'Please enter a champion name';
       this.successMessage = '';
@@ -50,7 +60,8 @@ export class AddChampionSection {
     this.errorMessage = '';
     this.successMessage = '';
 
-    this.firebaseService.createChampion(this.sessionId, {
+    const currentSessionId = this.sessionService.getCurrentSessionId();
+    this.firebaseService.createChampion(currentSessionId, {
       name: this.championName.trim()
     }).subscribe({
       next: () => {
@@ -62,5 +73,16 @@ export class AddChampionSection {
         this.errorMessage = 'Error adding champion. Please try again.';
       }
     });
+  }
+
+  protected displayChampionName(champion: any): string {
+    return champion && champion.name ? champion.name : '';
+  }
+
+  private _filter(name: string): any[] {
+    const filterValue = name.toLowerCase();
+    return this.availableChampions.filter(champion =>
+      champion.name.toLowerCase().includes(filterValue)
+    );
   }
 }

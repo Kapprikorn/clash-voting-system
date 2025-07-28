@@ -1,30 +1,43 @@
 <div class="container mt-4">
   <h2>League of Legends Champion Voting</h2>
 
-  @if (currentSessionId) {
+  @if (currentSession$ | async; as sessionId) {
     <div class="alert alert-info">
-      <strong>Current Session:</strong> {{ currentSessionId }}
+      <strong>Current Session:</strong> {{ sessionId }}
     </div>
   }
 
   <app-login />
 
   <!-- User Vote Summary -->
-  @if ((user$ | async) && getUserVoteCount() > 0) {
-    <div class="alert alert-success mt-4">
-      <i class="fas fa-check-circle"></i> You have voted for <strong>{{ getUserVoteCount() }}</strong> champion(s).
-                                          You can vote once per champion!
+  @if (user$ | async) {
+    @if (userVoteCount$ | async; as voteCount) {
+      @if (voteCount > 0) {
+        <div class="alert alert-success mt-4">
+          <i class="fas fa-check-circle"></i> You have voted for <strong>{{ voteCount }}</strong> champion(s).
+                                              You can vote once per champion!
+        </div>
+      }
+    }
+  }
+
+  <!-- Error Message -->
+  @if (errorMessage) {
+    <div class="alert alert-danger mt-4">
+      {{ errorMessage }}
     </div>
   }
 
   <!-- Admin Controls -->
   <app-admin-section />
 
-  <!-- Add Champion -->
-  <app-add-champion-section
-    [availableChampions]="availableChampions"
-    [isLoading]="isLoading"
-  />
+  @if (availableChampions$ | async; as availableChampions) {
+    <!-- Add Champion -->
+    <app-add-champion-section
+      [availableChampions]="availableChampions"
+      [isLoading]="isLoading"
+    />
+  }
 
   <!-- Voting Section -->
   <app-voting-section />

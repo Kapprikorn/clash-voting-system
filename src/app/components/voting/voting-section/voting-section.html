@@ -1,4 +1,4 @@
-@if (champions.length > 0) {
+@if (champions$ | async; as champions) {
   <div class="card mt-4">
     <div class="card-header">
       <h4>Vote for Champions ({{ champions.length }} available)</h4>

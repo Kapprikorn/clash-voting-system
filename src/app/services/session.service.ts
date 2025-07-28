@@ -69,7 +69,6 @@ export class SessionService {
    */
   async initializeSession(): Promise<void> {
     await this.loadCurrentSession();
-    this.loadChampions();
   }
 
   /**
@@ -116,7 +115,7 @@ export class SessionService {
 
       this.currentSessionSubject.next(sessionId);
       this.championsSubject.next([]); // Clear champions for new session
-      this.loadChampions(); // Start listening to the new session's champions
+      this.loadChampions(sessionId); // Start listening to the new session's champions
 
       return sessionId;
     } catch (error) {
@@ -128,16 +127,13 @@ export class SessionService {
   /**
    * Load and listen to champions for the current session
    */
-  private loadChampions(): void {
-    const currentSessionId = this.currentSessionSubject.value;
-    if (!currentSessionId) return;
-
+  private loadChampions(sessionId: string): void {
     // Unsubscribe from previous listener if exists
     if (this.championsUnsubscribe) {
       this.championsUnsubscribe();
     }
 
-    const championsRef = collection(this.firestore, `votingSessions/${currentSessionId}/champions`);
+    const championsRef = collection(this.firestore, `votingSessions/${sessionId}/champions`);
 
     this.championsUnsubscribe = onSnapshot(championsRef, (snapshot) => {
       const champions: Champion[] = snapshot.docs.map(doc => {
@@ -151,65 +147,6 @@ export class SessionService {
 
       this.championsSubject.next(champions);
     });
-  }
-
-  /**
-   * Get the number of votes the current user has cast
-   */
-  getUserVoteCount(): number {
-    const currentUser = this.getCurrentUser();
-    if (!currentUser) return 0;
-
-    const champions = this.getCurrentChampions();
-    return champions.filter(champion =>
-      champion.votes?.includes(currentUser.uid)
-    ).length;
-  }
-
-  /**
-   * Get session information
-   */
-  async getSessionInfo(sessionId?: string): Promise<SessionInfo | null> {
-    const targetSessionId = sessionId || this.getCurrentSessionId();
-    if (!targetSessionId) return null;
-
-    try {
-      const sessionDoc = doc(this.firestore, `votingSessions/${targetSessionId}`);
-      const docSnap = await getDoc(sessionDoc);
-
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        return {
-          sessionId: targetSessionId,
-          createdAt: data['createdAt']?.toDate() || new Date(),
-          status: data['status'] || 'unknown'
-        };
-      }
-      return null;
-    } catch (error) {
-      console.error('Error getting session info:', error);
-      return null;
-    }
-  }
-
-  /**
-   * Check if a user has voted for a specific champion
-   */
-  hasUserVotedForChampion(championId: string): boolean {
-    const currentUser = this.getCurrentUser();
-    if (!currentUser) return false;
-
-    const champions = this.getCurrentChampions();
-    const champion = champions.find(c => c.id === championId);
-    return champion?.votes?.includes(currentUser.uid) || false;
-  }
-
-  /**
-   * Get a specific champion by ID
-   */
-  getChampionById(championId: string): Champion | undefined {
-    const champions = this.getCurrentChampions();
-    return champions.find(c => c.id === championId);
   }
 
   /**

@@ -1,12 +1,15 @@
 import {Component, inject} from '@angular/core';
-import {User} from '@angular/fire/auth';
-import {FirebaseChampion} from '../../../models/firebase.models';
 import {FirebaseService} from '../../../services/http/firebase.service';
 import {SessionService} from '../../../services/session.service';
+import {filter, switchMap} from 'rxjs/operators';
+import {combineLatest, map} from 'rxjs';
+import {AsyncPipe} from '@angular/common';
 
 @Component({
   selector: 'app-voting-statistics',
-  imports: [],
+  imports: [
+    AsyncPipe
+  ],
   templateUrl: './voting-statistics.html',
   styleUrl: './voting-statistics.scss'
 })
@@ -14,33 +17,36 @@ export class VotingStatistics {
   private firebaseService = inject(FirebaseService);
   private sessionService = inject(SessionService);
 
-  protected user: User | null;
-  protected champions: FirebaseChampion[] = [];
+  protected user$ = this.firebaseService.getCurrentUser();
 
-  constructor() {
-    this.user = this.sessionService.getCurrentUser();
-    this.firebaseService.getChampions(this.sessionService.getCurrentSessionId()).subscribe({
-      next: value => this.champions = value,
-    });
-  }
+  protected champions$ = this.sessionService.currentSession$.pipe(
+    filter(sessionId => !!sessionId),
+    switchMap(sessionId => this.firebaseService.getChampions(sessionId))
+  );
 
-  protected getTotalVotes(): number {
-    return this.champions.reduce((total, champion) => total + (champion.votes.length || 0), 0);
-  }
+  // Computed statistics
+  protected totalVotes$ = this.champions$.pipe(
+    map(champions => champions.reduce((total, champion) =>
+      total + (champion.votes?.length || 0), 0
+    ))
+  );
 
-  protected getLeadingChampion(): any {
-    if (this.champions.length === 0) return null;
+  protected leadingChampion$ = this.champions$.pipe(
+    map(champions => {
+      if (champions.length === 0) return null;
+      return champions.reduce((leading, current) =>
+        (current.votes?.length || 0) > (leading.votes?.length || 0) ? current : leading
+      );
+    })
+  );
 
-    return this.champions.reduce((leading, current) =>
-      (current.votes.length || 0) > (leading.votes.length || 0) ? current : leading
-    );
-  }
+  protected userVoteCount$ = combineLatest([this.user$, this.champions$]).pipe(
+    map(([user, champions]) => {
+      if (!user) return 0;
+      return champions.filter(champion =>
+        champion.votes?.includes(user.uid)
+      ).length;
+    })
+  );
 
-  protected getUserVoteCount(): number {
-    if (!this.user) return 0;
-
-    return this.champions.filter(champion =>
-      champion.votes?.includes(this.user!.uid)
-    ).length;
-  }
 }
