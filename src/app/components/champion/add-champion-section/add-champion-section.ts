@@ -1,7 +1,7 @@
 import {Component, inject, Input, OnInit} from '@angular/core';
 import {FormControl, FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {FirebaseService} from '../../../services/http/firebase.service';
-import {map, Observable, startWith} from 'rxjs';
+import {combineLatest, map, Observable, startWith} from 'rxjs';
 import {AsyncPipe} from '@angular/common';
 import {SessionService} from '../../../services/session.service';
 import {MatFormFieldModule} from '@angular/material/form-field';
@@ -38,11 +38,28 @@ export class AddChampionSection implements OnInit {
   protected isAdmin$ = this.firebaseService.isAdmin();
 
   ngOnInit() {
-    this.filteredChampions = this.championControl.valueChanges.pipe(
-      startWith(''),
-      map(value => {
+    this.filteredChampions = combineLatest([
+      this.championControl.valueChanges.pipe(startWith('')),
+      this.sessionService.champions$
+    ]).pipe(
+      map(([value, currentChampions]) => {
         const name = typeof value === 'string' ? value : value?.name;
-        return name ? this._filter(name as string) : this.availableChampions.slice();
+        const searchTerm = name || '';
+
+        // Get champions that are already in the session
+        const existingChampionNames = currentChampions.map(champion =>
+          champion.name.toLowerCase()
+        );
+
+        // Filter out champions that are already in the session
+        const availableForSelection = this.availableChampions.filter(champion =>
+          !existingChampionNames.includes(champion.name.toLowerCase())
+        );
+
+        // Apply search filter
+        return searchTerm
+          ? this._filter(searchTerm, availableForSelection)
+          : availableForSelection.slice();
       })
     );
   }
@@ -53,6 +70,18 @@ export class AddChampionSection implements OnInit {
 
     if (!championName?.trim()) {
       this.errorMessage = 'Please enter a champion name';
+      this.successMessage = '';
+      return;
+    }
+
+    // Check if champion is already in session
+    const currentChampions = this.sessionService.getCurrentChampions();
+    const championExists = currentChampions.some(champion =>
+      champion.name.toLowerCase() === championName.trim().toLowerCase()
+    );
+
+    if (championExists) {
+      this.errorMessage = `Champion "${championName}" is already in this session`;
       this.successMessage = '';
       return;
     }
@@ -88,9 +117,9 @@ export class AddChampionSection implements OnInit {
     return champion && champion.name ? champion.name : '';
   }
 
-  private _filter(name: string): any[] {
+  private _filter(name: string, championsToFilter: any[]): any[] {
     const filterValue = name.toLowerCase();
-    return this.availableChampions.filter(champion => {
+    return championsToFilter.filter(champion => {
       const championName = champion.name.toLowerCase();
       return this._isSubsequence(filterValue, championName);
     });
