@@ -5,7 +5,6 @@ import {catchError, combineLatest, map, of, Subscription} from 'rxjs';
 import {DatadragonService} from '../../services/http/datadragon.service';
 import {VotingSection} from '../../components/voting/voting-section/voting-section';
 import {AddChampionSection} from '../../components/champion/add-champion-section/add-champion-section';
-import {AdminSection} from '../../components/admin/admin-section/admin-section';
 import {SessionService} from '../../services/session.service';
 
 @Component({
@@ -13,7 +12,13 @@ import {SessionService} from '../../services/session.service';
   templateUrl: './voting.html',
   styleUrls: ['./voting.scss'],
   standalone: true,
-  imports: [FormsModule, CommonModule, AsyncPipe, VotingSection, AddChampionSection, AdminSection]
+  imports: [
+    FormsModule,
+    CommonModule,
+    AsyncPipe,
+    VotingSection,
+    AddChampionSection,
+  ]
 })
 export class VotingComponent implements OnInit, OnDestroy {
   private datadragonService = inject(DatadragonService);

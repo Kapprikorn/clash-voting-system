@@ -1,9 +1,11 @@
 @if (user) {
   <div class="logged-in-container">
-    @if (isAdmin$ | async) {
-      <span class="badge bg-warning text-dark">Admin</span>
-    }
-    <span>{{ user.displayName }}</span>
+    <div class="login-info">
+      @if (isAdmin$ | async) {
+        <span class="badge bg-warning text-dark">Admin</span>
+      }
+      <span>{{ user.displayName }}</span>
+    </div>
     <button matButton="filled" (click)="logout()">
       Logout
     </button>

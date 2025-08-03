@@ -1,36 +1,15 @@
-<div class="container mt-4">
-  <h2 style="text-wrap: balance">League of Legends Champion Voting</h2>
-
-  <!-- User Vote Summary -->
-  @if (user$ | async) {
-    @if (userVoteCount$ | async; as voteCount) {
-      @if (voteCount > 0) {
-        <div class="alert alert-success mt-4">
-          <i class="fas fa-check-circle"></i> You have voted for <strong>{{ voteCount }}</strong> champion(s).
-                                              You can vote once per champion!
-        </div>
-      }
-    }
-  }
-
-  <!-- Error Message -->
-  @if (errorMessage) {
-    <div class="alert alert-danger mt-4">
-      {{ errorMessage }}
-    </div>
-  }
-
-  <!-- Admin Controls -->
-  <app-admin-section />
-
-  @if (availableChampions$ | async; as availableChampions) {
-    <!-- Add Champion -->
-    <app-add-champion-section
-      [availableChampions]="availableChampions"
-      [isLoading]="isLoading"
-    />
-  }
-
+<div class="container main-voting-wrapper">
   <!-- Voting Section -->
-  <app-voting-section />
+  <app-voting-section class="voting-section" />
+
+  <div class="controls">
+    @if (availableChampions$ | async; as availableChampions) {
+      <!-- Add Champion -->
+      <app-add-champion-section
+        [availableChampions]="availableChampions"
+        [isLoading]="isLoading"
+        class="add-champion"
+      />
+    }
+  </div>
 </div>

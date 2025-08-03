@@ -12,6 +12,14 @@
   width: fit-content;
 }
 
+.login-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  justify-content: center;
+  align-items: center;
+}
+
 @media screen and (width < 600px) {
   :host, .logged-in-container {
     flex-direction: row;

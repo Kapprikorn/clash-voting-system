@@ -43,6 +43,7 @@ export class AddChampionSection implements OnInit {
       this.sessionService.champions$
     ]).pipe(
       map(([value, currentChampions]) => {
+        console.log('value:', value);
         const name = typeof value === 'string' ? value : value?.name;
         const searchTerm = name || '';
 
@@ -68,12 +69,6 @@ export class AddChampionSection implements OnInit {
     const championValue = this.championControl.value;
     const championName = typeof championValue === 'string' ? championValue : championValue?.name;
 
-    if (!championName?.trim()) {
-      this.errorMessage = 'Please enter a champion name';
-      this.successMessage = '';
-      return;
-    }
-
     // Check if champion is already in session
     const currentChampions = this.sessionService.getCurrentChampions();
     const championExists = currentChampions.some(champion =>
@@ -81,14 +76,8 @@ export class AddChampionSection implements OnInit {
     );
 
     if (championExists) {
-      this.errorMessage = `Champion "${championName}" is already in this session`;
-      this.successMessage = '';
       return;
     }
-
-    // Clear previous messages
-    this.errorMessage = '';
-    this.successMessage = '';
 
     const currentSessionId = this.sessionService.getCurrentSessionId();
     this.firebaseService.createChampion(currentSessionId, {

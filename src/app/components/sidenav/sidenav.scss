@@ -10,6 +10,12 @@
   gap: 12px;
 }
 
+.nav-bar-end {
+  display: inherit;
+  flex-direction: inherit;
+  gap: inherit;
+}
+
 @media screen and (width < 600px) {
   :host {
     flex-direction: row;
