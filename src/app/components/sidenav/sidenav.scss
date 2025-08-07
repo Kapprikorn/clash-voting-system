@@ -16,7 +16,7 @@
   gap: inherit;
 }
 
-@media screen and (width < 600px) {
+@media screen and (width < 800px) {
   :host {
     flex-direction: row;
   }

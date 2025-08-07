@@ -1,7 +1,7 @@
 import {Component, inject, Input, OnInit} from '@angular/core';
 import {FormControl, FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {FirebaseService} from '../../../services/http/firebase.service';
-import {combineLatest, map, Observable, startWith} from 'rxjs';
+import {BehaviorSubject, combineLatest, map, Observable} from 'rxjs';
 import {AsyncPipe} from '@angular/common';
 import {SessionService} from '../../../services/session.service';
 import {MatFormFieldModule} from '@angular/material/form-field';
@@ -33,20 +33,19 @@ export class AddChampionSection implements OnInit {
   protected championControl = new FormControl();
   protected filteredChampions: Observable<any[]> = new Observable();
 
+  // Replace valueChanges with input subject
+  private inputSubject = new BehaviorSubject<string>('');
+
   // Combined observables for template usage
   protected user$ = this.firebaseService.getCurrentUser();
   protected isAdmin$ = this.firebaseService.isAdmin();
 
   ngOnInit() {
     this.filteredChampions = combineLatest([
-      this.championControl.valueChanges.pipe(startWith('')),
+      this.inputSubject.asObservable(), // Use input subject instead of valueChanges
       this.sessionService.champions$
     ]).pipe(
-      map(([value, currentChampions]) => {
-        console.log('value:', value);
-        const name = typeof value === 'string' ? value : value?.name;
-        const searchTerm = name || '';
-
+      map(([searchTerm, currentChampions]) => {
         // Get champions that are already in the session
         const existingChampionNames = currentChampions.map(champion =>
           champion.name.toLowerCase()
@@ -58,11 +57,17 @@ export class AddChampionSection implements OnInit {
         );
 
         // Apply search filter
-        return searchTerm
+        return searchTerm.trim()
           ? this._filter(searchTerm, availableForSelection)
           : availableForSelection.slice();
       })
     );
+  }
+
+  // Add method to handle input changes
+  protected onInputChange(event: Event) {
+    const target = event.target as HTMLInputElement;
+    this.inputSubject.next(target.value);
   }
 
   protected addChampion() {
@@ -88,6 +93,7 @@ export class AddChampionSection implements OnInit {
         this.championControl.setValue(''); // Clear the form control
         this.championControl.markAsUntouched(); // Reset touched state
         this.championControl.markAsPristine(); // Reset dirty state
+        this.inputSubject.next(''); // Clear the search filter
 
         // Clear any validation errors
         this.championControl.setErrors(null);

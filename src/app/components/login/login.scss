@@ -20,7 +20,7 @@
   align-items: center;
 }
 
-@media screen and (width < 600px) {
+@media screen and (width < 800px) {
   :host, .logged-in-container {
     flex-direction: row;
   }

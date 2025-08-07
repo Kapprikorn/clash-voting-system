@@ -1,5 +1,5 @@
 @if (user$ | async) {
-  <form>
+  <form (ngSubmit)="addChampion()" #championForm="ngForm">
     <div class="d-flex flex-column">
       <mat-form-field class="w-100">
         <mat-label>
@@ -12,11 +12,12 @@
           required
           [matAutocomplete]="championAuto"
           placeholder="Champion name"
-          (keydown.enter)="addChampion()">
+          (input)="onInputChange($event)">
         <mat-autocomplete
           #championAuto="matAutocomplete"
           [displayWith]="displayChampionName"
           autoActiveFirstOption
+          requireSelection
         >
           @for (champion of filteredChampions | async; track champion.name) {
             <mat-option [value]="champion">
@@ -25,6 +26,21 @@
           }
         </mat-autocomplete>
       </mat-form-field>
+      <button
+        type="submit"
+        class="btn btn-primary"
+        [disabled]="isLoading || !championControl.value || availableChampions.length === 0">
+        @if (isLoading) {
+          <span class="spinner-border spinner-border-sm me-2" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </span>
+        }
+        {{
+          isLoading
+          ? 'Adding...'
+          : 'Add Champion'
+        }}
+      </button>
     </div>
   </form>
 }
