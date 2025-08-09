@@ -16,7 +16,8 @@
 
 @media screen and (width < 800px) {
   .main-voting-wrapper {
-    flex-direction: column;
+    flex-direction: column-reverse;
+    gap: 0;
   }
 
   .controls {
