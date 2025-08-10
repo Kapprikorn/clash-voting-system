@@ -7,6 +7,7 @@ import {SessionService} from '../../../services/session.service';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatAutocompleteModule} from '@angular/material/autocomplete';
 import {MatInputModule} from '@angular/material/input';
+import {MatButton} from '@angular/material/button';
 
 @Component({
   selector: 'app-add-champion-section',
@@ -17,6 +18,7 @@ import {MatInputModule} from '@angular/material/input';
     MatFormFieldModule,
     MatAutocompleteModule,
     MatInputModule,
+    MatButton,
   ],
   templateUrl: './add-champion-section.html',
   styleUrl: './add-champion-section.scss'

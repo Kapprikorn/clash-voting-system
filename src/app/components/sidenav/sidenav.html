@@ -1,5 +1,5 @@
 @if (currentSession$ | async; as session) {
-  <div class="alert alert-info session-info">
+  <div class="alert alert-info session-info m-0">
     <strong>Session:</strong>
     <span>{{ session.createdAt | date }}</span>
   </div>
