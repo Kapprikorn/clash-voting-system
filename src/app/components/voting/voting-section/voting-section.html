@@ -6,7 +6,7 @@
       <p>You can vote once per champion. Click vote again to remove your vote.</p>
     </div>
     <div>
-      <div class="row">
+      <div class="row w-100">
         @for (champion of champions; track champion.id) {
           <app-vote-details
             [champion]="champion"
