@@ -1,12 +1,12 @@
 <h2 style="text-wrap: balance">League of Legends Champion Voting</h2>
 
 @if (champions$ | async; as champions) {
-  <div class="card mt-4">
-    <div class="card-header">
+  <div class="mt-4">
+    <div>
       <h4>Vote for Champions ({{ champions.length }} available)</h4>
-      <p class="mb-0 text-muted">You can vote once per champion. Click vote again to remove your vote.</p>
+      <p class="mb-0">You can vote once per champion. Click vote again to remove your vote.</p>
     </div>
-    <div class="card-body">
+    <div>
       <div class="row">
         @for (champion of champions; track champion.id) {
           <app-vote-details
@@ -20,10 +20,10 @@
     </div>
   </div>
 } @else {
-  <div class="card mt-4">
-    <div class="card-body text-center">
+  <div class="mt-4">
+    <div class="text-center">
       <h5>No Champions Available</h5>
-      <p class="text-muted">Ask an admin to add some champions to start voting!</p>
+      <p>Log in and add some champions to start voting!</p>
     </div>
   </div>
 }

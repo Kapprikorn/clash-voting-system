@@ -1,9 +1,9 @@
 <div class="col-md-6 col-lg-4 mb-3">
   <div
-    class="card h-100 border"
+    class="h-100 border"
     [class.border-success]="hasUserVotedForChampion()"
-    [class.bg-light]="hasUserVotedForChampion()">
-    <div class="card-body d-flex flex-column">
+  >
+    <div class="d-flex flex-column">
       <!-- Champion Image and Name -->
       <div class="d-flex align-items-center">
         @if (championImageUrl) {
@@ -16,7 +16,7 @@
           >
         }
         <div>
-          <h5 class="card-title mb-1">{{ champion.name }}</h5>
+          <h5 class="mb-1">{{ champion.name }}</h5>
         </div>
       </div>
 

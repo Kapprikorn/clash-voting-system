@@ -11,13 +11,12 @@
   overflow-y: auto;
   background-color: var(--mat-sys-surface);
   border-right: 1px solid var(--mat-sys-outline);
-  box-shadow: rgba(14, 30, 37, 0.12) 0 2px 4px 0,
-  rgba(14, 30, 37, 0.32) 0 2px 16px 0;
+  box-shadow: var(--mat-sys-level5);
 }
 
 main {
   flex-grow: 1;
-  overflow-y: auto;
+  overflow-y: auto;;
 }
 
 @media screen and (width < 800px) {
