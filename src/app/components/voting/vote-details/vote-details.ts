@@ -128,4 +128,13 @@ export class VoteDetails implements OnInit, OnDestroy {
       }
     });
   }
+
+  protected getVoteFillGradient(voteCount: number): string {
+    // Calculate fill percentage (20% per vote, max 100%)
+    const fillPercentage = Math.min(voteCount * 20, 100);
+
+    // Create a gradient that fills from left to right
+    return `linear-gradient(to right, #28a745 0%, #28a745 ${fillPercentage}%, transparent ${fillPercentage}%, transparent 100%)`;
+  }
+
 }
