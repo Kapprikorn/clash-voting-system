@@ -1,6 +1,6 @@
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import {Observable, map, BehaviorSubject} from 'rxjs';
+import {Injectable} from '@angular/core';
+import {HttpClient} from '@angular/common/http';
+import {BehaviorSubject, map, Observable, switchMap} from 'rxjs';
 
 export interface DataDragonChampion {
   id: string;
@@ -39,13 +39,44 @@ export interface DataDragonChampionResponse {
   providedIn: 'root'
 })
 export class DatadragonService {
-  private readonly baseUrl = 'https://ddragon.leagueoflegends.com/cdn/15.14.1/data/en_US';
-  public readonly imageBaseUrl = 'https://ddragon.leagueoflegends.com/cdn/15.14.1/img/champion/';
+  private baseUrl$ = new BehaviorSubject<string>('');
+  private imageBaseUrl$ = new BehaviorSubject<string>('');
+  private readonly versionsUrl = 'https://ddragon.leagueoflegends.com/api/versions.json';
 
   private championsCache$ = new BehaviorSubject<DataDragonChampion[] | null>(null);
   private isLoading = false;
+  private isVersionInitialized = false;
 
   constructor(private http: HttpClient) {
+    this.initializeVersion();
+  }
+
+  /**
+   * Initialize the version by fetching from the API
+   */
+  private initializeVersion(): void {
+    this.http.get<string[]>(this.versionsUrl).subscribe({
+      next: (versions) => {
+        const latestVersion = versions[0];
+        this.baseUrl$.next(`https://ddragon.leagueoflegends.com/cdn/${latestVersion}/data/en_US`);
+        this.imageBaseUrl$.next(`https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/champion/`);
+        this.isVersionInitialized = true;
+      },
+      error: (error) => {
+        console.error('Failed to fetch version, using fallback:', error);
+        // Fallback to hardcoded version
+        this.baseUrl$.next('https://ddragon.leagueoflegends.com/cdn/15.15.1/data/en_US');
+        this.imageBaseUrl$.next('https://ddragon.leagueoflegends.com/cdn/15.15.1/img/champion/');
+        this.isVersionInitialized = true;
+      }
+    });
+  }
+
+  /**
+   * Gets the current image base URL
+   */
+  get imageBaseUrl(): Observable<string> {
+    return this.imageBaseUrl$.asObservable();
   }
 
   /**
@@ -65,19 +96,20 @@ export class DatadragonService {
   private loadChampions(): void {
     this.isLoading = true;
 
-    this.http.get<DataDragonChampionResponse>(`${this.baseUrl}/champion.json`)
-      .subscribe({
-        next: (response) => {
-          const champions = Object.values(response.data);
-          this.championsCache$.next(champions);
-          this.isLoading = false;
-        },
-        error: (error) => {
-          console.error('Failed to load champions:', error);
-          this.championsCache$.next([]);
-          this.isLoading = false;
-        }
-      });
+    this.baseUrl$.pipe(
+      switchMap(baseUrl => this.http.get<DataDragonChampionResponse>(`${baseUrl}/champion.json`))
+    ).subscribe({
+      next: (response) => {
+        const champions = Object.values(response.data);
+        this.championsCache$.next(champions);
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Failed to load champions:', error);
+        this.championsCache$.next([]);
+        this.isLoading = false;
+      }
+    });
   }
 
   /**
@@ -88,10 +120,8 @@ export class DatadragonService {
     this.loadChampions();
   }
 
-
-
   /**
-   * Gets vote-details names only as an array of strings
+   * Gets champion names only as an array of strings
    */
   getChampionNames(): Observable<string[]> {
     return this.getAllChampions().pipe(
@@ -100,7 +130,7 @@ export class DatadragonService {
   }
 
   /**
-   * Gets a specific vote-details by name
+   * Gets a specific champion by name
    */
   getChampionByName(name: string): Observable<DataDragonChampion | undefined> {
     return this.getAllChampions().pipe(
@@ -112,7 +142,11 @@ export class DatadragonService {
 
   getChampionImageUrlByName(name: string): Observable<string> {
     return this.getChampionByName(name).pipe(
-      map(champion => champion ? this.imageBaseUrl + champion.image.full : '')
+      switchMap(champion =>
+        this.imageBaseUrl.pipe(
+          map(baseUrl => champion ? baseUrl + champion.image.full : '')
+        )
+      )
     );
   }
 }
