@@ -1,14 +1,15 @@
-import {inject, Injectable} from '@angular/core';
+import {EnvironmentInjector, inject, Injectable, runInInjectionContext} from '@angular/core';
 import {
   addDoc,
   arrayRemove,
   arrayUnion,
   collection,
+  collectionData,
   deleteDoc,
   doc,
+  docData,
   DocumentReference,
   Firestore,
-  onSnapshot,
   orderBy,
   query,
   updateDoc,
@@ -23,198 +24,177 @@ import {FirebaseChampion, Settings, VoteRequest, VotingSession} from '../../mode
 export class FirebaseService {
   private firestore = inject(Firestore);
   private auth = inject(Auth);
-
-  // Collection references
-  private settingsCollection = collection(this.firestore, 'settings');
-  private votingSessionsCollection = collection(this.firestore, 'votingSessions');
+  private env = inject(EnvironmentInjector);
 
   constructor() {
   }
 
   // Settings methods
   getSettings(): Observable<Settings[]> {
-    return new Observable(observer => {
-      const unsubscribe = onSnapshot(this.settingsCollection, snapshot => {
-        const settings = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        } as Settings));
-        observer.next(settings);
-      }, error => observer.error(error));
-
-      return () => unsubscribe();
+    return runInInjectionContext(this.env, () => {
+      const ref = collection(this.firestore, 'settings');
+      return collectionData(ref, {idField: 'id'}) as Observable<Settings[]>;
     });
   }
 
   getSetting(id: string): Observable<Settings | null> {
-    const settingDoc = doc(this.firestore, 'settings', id);
-    return new Observable(observer => {
-      const unsubscribe = onSnapshot(settingDoc, snapshot => {
-        if (snapshot.exists()) {
-          observer.next({id: snapshot.id, ...snapshot.data()} as Settings);
-        } else {
-          observer.next(null);
-        }
-      }, error => observer.error(error));
-
-      return () => unsubscribe();
+    return runInInjectionContext(this.env, () => {
+      const ref = doc(this.firestore, 'settings', id);
+      return docData(ref, {idField: 'id'}).pipe(
+        map(d => (d as Settings) ?? null)
+      );
     });
   }
 
   updateSetting(id: string, data: Partial<Settings>): Observable<void> {
-    const settingDoc = doc(this.firestore, 'settings', id);
-    return from(updateDoc(settingDoc, data));
+    return from(runInInjectionContext(this.env, () => {
+      const ref = doc(this.firestore, 'settings', id);
+      return updateDoc(ref, data);
+    }));
   }
 
   createSetting(data: Omit<Settings, 'id'>): Observable<DocumentReference> {
-    return from(addDoc(this.settingsCollection, data));
+    return from(runInInjectionContext(this.env, () => {
+      const ref = collection(this.firestore, 'settings');
+      return addDoc(ref, data);
+    }));
   }
 
   // Voting Sessions methods
   getVotingSessions(): Observable<VotingSession[]> {
-    const q = query(this.votingSessionsCollection, orderBy('createdAt', 'desc'));
-    return new Observable(observer => {
-      const unsubscribe = onSnapshot(q, snapshot => {
-        const sessions = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          createdAt: doc.data()['createdAt']?.toDate() || new Date(),
-          endDate: doc.data()['endDate']?.toDate()
-        } as VotingSession));
-        observer.next(sessions);
-      }, error => observer.error(error));
-
-      return () => unsubscribe();
+    return runInInjectionContext(this.env, () => {
+      const ref = collection(this.firestore, 'votingSessions');
+      const q = query(ref, orderBy('createdAt', 'desc'));
+      return collectionData(q, {idField: 'id'}).pipe(
+        map((sessions: any[]) =>
+          sessions.map(s => ({
+            ...s,
+            createdAt: s['createdAt']?.toDate ? s['createdAt'].toDate() : (s['createdAt'] ?? new Date()),
+            endDate: s['endDate']?.toDate ? s['endDate'].toDate() : s['endDate']
+          }) as VotingSession)
+        )
+      );
     });
   }
 
   getVotingSession(sessionId: string): Observable<VotingSession | null> {
-    const sessionDoc = doc(this.firestore, 'votingSessions', sessionId);
-    return new Observable(observer => {
-      const unsubscribe = onSnapshot(sessionDoc, snapshot => {
-        if (snapshot.exists()) {
-          const data = snapshot.data();
-          observer.next({
-            id: snapshot.id,
-            ...data,
-            createdAt: data['createdAt']?.toDate() || new Date(),
-            endDate: data['endDate']?.toDate()
-          } as VotingSession);
-        } else {
-          observer.next(null);
-        }
-      }, error => observer.error(error));
-
-      return () => unsubscribe();
+    return runInInjectionContext(this.env, () => {
+      const ref = doc(this.firestore, 'votingSessions', sessionId);
+      return docData(ref, {idField: 'id'}).pipe(
+        map((d: any | undefined) => {
+          if (!d) return null;
+          return {
+            ...d,
+            createdAt: d['createdAt']?.toDate ? d['createdAt'].toDate() : (d['createdAt'] ?? new Date()),
+            endDate: d['endDate']?.toDate ? d['endDate'].toDate() : d['endDate']
+          } as VotingSession;
+        })
+      );
     });
   }
 
   createVotingSession(data: Omit<VotingSession, 'id'>): Observable<DocumentReference> {
-    const sessionData = {
-      ...data,
-      createdAt: new Date(),
-      endDate: data.endDate || null
-    };
-    return from(addDoc(this.votingSessionsCollection, sessionData));
+    return from(runInInjectionContext(this.env, () => {
+      const ref = collection(this.firestore, 'votingSessions');
+      const sessionData = {
+        ...data,
+        createdAt: new Date(),
+        endDate: data.endDate || null
+      };
+      return addDoc(ref, sessionData);
+    }));
   }
 
   updateVotingSession(sessionId: string, data: Partial<VotingSession>): Observable<void> {
-    const sessionDoc = doc(this.firestore, 'votingSessions', sessionId);
-    const updateData = {...data};
-    if (updateData.endDate) {
-      updateData.endDate = new Date(updateData.endDate);
-    }
-    return from(updateDoc(sessionDoc, updateData));
+    return from(runInInjectionContext(this.env, () => {
+      const ref = doc(this.firestore, 'votingSessions', sessionId);
+      const updateData: any = {...data};
+      if (updateData.endDate) {
+        updateData.endDate = new Date(updateData.endDate);
+      }
+      return updateDoc(ref, updateData);
+    }));
   }
 
   deleteVotingSession(sessionId: string): Observable<void> {
-    const sessionDoc = doc(this.firestore, 'votingSessions', sessionId);
-    return from(deleteDoc(sessionDoc));
+    return from(runInInjectionContext(this.env, () => {
+      const ref = doc(this.firestore, 'votingSessions', sessionId);
+      return deleteDoc(ref);
+    }));
   }
 
   // Champions methods
   getChampions(sessionId: string): Observable<FirebaseChampion[]> {
-    if (!sessionId) throw new Error("no sessionId given");
-    const championsCollection = collection(this.firestore, `votingSessions/${sessionId}/champions`);
-    const q = query(championsCollection);
-
-    return new Observable(observer => {
-      const unsubscribe = onSnapshot(q, snapshot => {
-        const champions = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        } as FirebaseChampion));
-        observer.next(champions);
-      }, error => observer.error(error));
-
-      return () => unsubscribe();
+    if (!sessionId) throw new Error('no sessionId given');
+    return runInInjectionContext(this.env, () => {
+      const ref = collection(this.firestore, `votingSessions/${sessionId}/champions`);
+      return collectionData(ref, {idField: 'id'}) as Observable<FirebaseChampion[]>;
     });
   }
 
   getChampion(sessionId: string, championId: string): Observable<FirebaseChampion | null> {
-    const championDoc = doc(this.firestore, `votingSessions/${sessionId}/champions`, championId);
-    return new Observable(observer => {
-      const unsubscribe = onSnapshot(championDoc, snapshot => {
-        if (snapshot.exists()) {
-          const data = snapshot.data();
-          observer.next({
-            id: snapshot.id,
-            ...data,
-          } as FirebaseChampion);
-        } else {
-          observer.next(null);
-        }
-      }, error => observer.error(error));
-
-      return () => unsubscribe();
+    return runInInjectionContext(this.env, () => {
+      const ref = doc(this.firestore, `votingSessions/${sessionId}/champions`, championId);
+      return docData(ref, {idField: 'id'}).pipe(
+        map(d => (d as FirebaseChampion) ?? null)
+      );
     });
   }
 
-  createChampion(sessionId: string, data: Omit<FirebaseChampion, 'id' | 'votes' | 'voteCount' | 'createdAt'>): Observable<DocumentReference> {
-    const championsCollection = collection(this.firestore, `votingSessions/${sessionId}/champions`);
-    const championData = {
-      ...data,
-      votes: [],
-      createdAt: new Date()
-    };
-    return from(addDoc(championsCollection, championData));
+  createChampion(
+    sessionId: string,
+    data: Omit<FirebaseChampion, 'id' | 'votes' | 'voteCount' | 'createdAt'>
+  ): Observable<DocumentReference> {
+    return from(runInInjectionContext(this.env, () => {
+      const ref = collection(this.firestore, `votingSessions/${sessionId}/champions`);
+      const championData = {
+        ...data,
+        votes: [],
+        createdAt: new Date()
+      };
+      return addDoc(ref, championData);
+    }));
   }
 
   updateChampion(sessionId: string, championId: string, data: Partial<FirebaseChampion>): Observable<void> {
-    const championDoc = doc(this.firestore, `votingSessions/${sessionId}/champions`, championId);
-    const updateData = {...data};
-    delete updateData.id;
-    return from(updateDoc(championDoc, updateData));
+    return from(runInInjectionContext(this.env, () => {
+      const ref = doc(this.firestore, `votingSessions/${sessionId}/champions`, championId);
+      const updateData = {...data} as Partial<FirebaseChampion>;
+      delete (updateData as any).id;
+      return updateDoc(ref, updateData as any);
+    }));
   }
 
   deleteChampion(sessionId: string, championId: string): Observable<void> {
-    const championDoc = doc(this.firestore, `votingSessions/${sessionId}/champions`, championId);
-    return from(deleteDoc(championDoc));
+    return from(runInInjectionContext(this.env, () => {
+      const ref = doc(this.firestore, `votingSessions/${sessionId}/champions`, championId);
+      return deleteDoc(ref);
+    }));
   }
 
   // Voting methods
   voteForChampion(voteRequest: VoteRequest): Observable<void> {
-    const championDoc = doc(this.firestore, `votingSessions/${voteRequest.sessionId}/champions`, voteRequest.championId);
-    return from(updateDoc(championDoc, {
-      votes: arrayUnion(voteRequest.userId)
+    return from(runInInjectionContext(this.env, () => {
+      const ref = doc(this.firestore, `votingSessions/${voteRequest.sessionId}/champions`, voteRequest.championId);
+      return updateDoc(ref, {votes: arrayUnion(voteRequest.userId)});
     }));
   }
 
   removeVoteForChampion(voteRequest: VoteRequest): Observable<void> {
-    const championDoc = doc(this.firestore, `votingSessions/${voteRequest.sessionId}/champions`, voteRequest.championId);
-    return from(updateDoc(championDoc, {
-      votes: arrayRemove(voteRequest.userId)
+    return from(runInInjectionContext(this.env, () => {
+      const ref = doc(this.firestore, `votingSessions/${voteRequest.sessionId}/champions`, voteRequest.championId);
+      return updateDoc(ref, {votes: arrayRemove(voteRequest.userId)});
     }));
   }
 
   // Utility methods
   getCurrentUser(): Observable<any> {
-    return authState(this.auth);
+    return runInInjectionContext(this.env, () => authState(this.auth));
   }
 
   isAdmin(): Observable<boolean> {
     return this.getCurrentUser().pipe(
-      map(user => user?.email === 'sjorsje11@gmail.com')
+      map(user => user?.email === '<admin@example.com>')
     );
   }
 
