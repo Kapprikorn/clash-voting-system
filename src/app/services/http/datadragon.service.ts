@@ -39,8 +39,8 @@ export interface DataDragonChampionResponse {
   providedIn: 'root'
 })
 export class DatadragonService {
-  private baseUrl$ = new BehaviorSubject<string>('');
-  private imageBaseUrl$ = new BehaviorSubject<string>('');
+  private baseUrl$ = new BehaviorSubject<string>('https://ddragon.leagueoflegends.com/cdn/15.15.1/data/en_US');
+  private imageBaseUrl$ = new BehaviorSubject<string>('https://ddragon.leagueoflegends.com/cdn/15.15.1/img/champion/');
   private readonly versionsUrl = 'https://ddragon.leagueoflegends.com/api/versions.json';
 
   private championsCache$ = new BehaviorSubject<DataDragonChampion[] | null>(null);

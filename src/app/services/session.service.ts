@@ -1,6 +1,6 @@
-import {inject, Injectable} from '@angular/core';
+import {EnvironmentInjector, inject, Injectable, runInInjectionContext} from '@angular/core';
 import {collection, doc, Firestore, getDocs, limit, orderBy, query, setDoc} from '@angular/fire/firestore';
-import {Auth, User} from '@angular/fire/auth';
+import {Auth, authState, User} from '@angular/fire/auth';
 import {BehaviorSubject, filter, Subscription, switchMap} from 'rxjs';
 import {FirebaseChampion} from '../models/firebase.models';
 import {FirebaseService} from './http/firebase.service';
@@ -27,6 +27,7 @@ export class SessionService {
   private firestore = inject(Firestore);
   private auth = inject(Auth);
   private firebaseService = inject(FirebaseService);
+  private envInjector = inject(EnvironmentInjector);
 
   private currentSessionSubject = new BehaviorSubject<SessionInfo | null>(null);
   private championsSubject = new BehaviorSubject<Champion[]>([]);
@@ -39,8 +40,8 @@ export class SessionService {
   public currentUser$ = this.currentUserSubject.asObservable();
 
   constructor() {
-    // Listen to auth state changes
-    this.auth.onAuthStateChanged((user) => {
+    // Use AngularFire's zone-aware authState observable instead of raw onAuthStateChanged
+    authState(this.auth).subscribe((user) => {
       this.currentUserSubject.next(user);
     });
 
@@ -90,7 +91,7 @@ export class SessionService {
         createdAt: timestamp,
         status: 'active',
         sessionId: sessionId
-      }
+      };
       const sessionDoc = doc(this.firestore, `votingSessions/${sessionId}`);
       await setDoc(sessionDoc, session);
 
@@ -106,33 +107,38 @@ export class SessionService {
 
   /**
    * Load the most recent session (by createdAt timestamp)
+   * Wrap Firebase SDK call in Angular's injection context to avoid warnings.
    */
   private async loadCurrentSession(): Promise<void> {
     try {
-      const sessionsQuery = query(
-        collection(this.firestore, 'votingSessions'),
-        orderBy('createdAt', 'desc'),
-        limit(1)
-      );
+      await runInInjectionContext(this.envInjector, async () => {
+        const sessionsQuery = query(
+          collection(this.firestore, 'votingSessions'),
+          orderBy('createdAt', 'desc'),
+          limit(1)
+        );
 
-      const snapshot = await getDocs(sessionsQuery);
-      if (!snapshot.empty) {
-        const sessionDoc = snapshot.docs[0];
-        const data = sessionDoc.data();
-        const session: SessionInfo = {
-          sessionId: sessionDoc.id, // Use the document ID, not data['sessionId']
-          createdAt: data['createdAt'].toDate(), // Convert Firestore timestamp to Date
-          status: data['status']
-        };
-        this.currentSessionSubject.next(session);
-      } else {
-        this.currentSessionSubject.next(null);
-      }
+        const snapshot = await getDocs(sessionsQuery);
+
+        if (!snapshot.empty) {
+          const sessionDoc = snapshot.docs[0];
+          const data = sessionDoc.data() as any;
+          const session: SessionInfo = {
+            sessionId: sessionDoc.id,
+            createdAt: data['createdAt']?.toDate ? data['createdAt'].toDate() : new Date(data['createdAt']),
+            status: data['status']
+          };
+          this.currentSessionSubject.next(session);
+        } else {
+          this.currentSessionSubject.next(null);
+        }
+      });
     } catch (error) {
       console.error('Error loading current session:', error);
       this.currentSessionSubject.next(null);
     }
   }
+
 
   /**
    * Set up champions listener using FirebaseService
@@ -145,7 +151,7 @@ export class SessionService {
 
     this.championsSubscription = this.currentSession$.pipe(
       filter(session => !!session),
-      switchMap(session => this.firebaseService.getChampions(session.sessionId))
+      switchMap(session => this.firebaseService.getChampions((session as SessionInfo).sessionId))
     ).subscribe(champions => {
       // Transform FirebaseChampion to Champion with voteCount and sorting
       const transformedChampions: Champion[] = champions.map(champion => ({
@@ -163,7 +169,6 @@ export class SessionService {
       this.championsSubject.next(transformedChampions);
     });
   }
-
 
   /**
    * Clean up subscriptions
