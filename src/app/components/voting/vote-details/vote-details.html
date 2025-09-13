@@ -21,12 +21,18 @@
             class="me-3"
           >
         }
-        <span
-          class="flex-grow-1 d-flex justify-content-between px-2 py-1 rounded"
-          [style.background]="getVoteFillGradient(champion.votes.length)">
-          <h4 class="mb-0">{{ champion.name }}</h4>
-          {{ champion.votes.length }} votes
+        @if (champion.name === 'Yuumi') {
+          <span>You can't ban an item</span>
+        } @else {
+          <span
+            class="flex-grow-1 d-flex justify-content-between px-2 py-1 rounded"
+            [style.background]="getVoteFillGradient(champion.votes.length)"
+          >
+            <h4 class="mb-0">{{ champion.name }}</h4>
+            {{ champion.votes.length }} votes
         </span>
+        }
+
       </div>
 
       <!-- Right side: Status Icon -->
