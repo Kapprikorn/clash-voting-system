@@ -1,7 +1,8 @@
 @if (currentSession$ | async; as session) {
   <div class="alert alert-info session-info m-0">
     <strong>Session:</strong>
-    <span>{{ session.createdAt | date }}</span>
+    <span>{{ session.createdAt | date:'MMM d, y' }}</span>
+    <span>{{ session.createdAt | date:'HH:mm' }}</span>
   </div>
 }
 
