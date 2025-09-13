@@ -194,7 +194,7 @@ export class FirebaseService {
 
   isAdmin(): Observable<boolean> {
     return this.getCurrentUser().pipe(
-      map(user => user?.email === '<admin@example.com>')
+      map(user => user?.displayName === 'Sjors')
     );
   }
 
