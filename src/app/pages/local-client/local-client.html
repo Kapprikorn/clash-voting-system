@@ -1,0 +1,49 @@
+<div class="container py-3">
+  <h2>Clash Bracket</h2>
+
+  @if (errorMessage; as err) {
+    <div class="alert alert-danger" role="alert">{{ err }}</div>
+  }
+
+  <!-- Bracket ID -->
+  <div class="mb-3">
+    <strong>Bracket ID:</strong>
+    @if (bracketId$ | async; as bracketId) {
+      {{ bracketId || 'Not found' }}
+    } @else {
+      <span>Loading bracket ID…</span>
+    }
+  </div>
+
+  <!-- Bracket Details -->
+  <div class="mb-3">
+    <h4>Bracket Details</h4>
+    @if (bracket$ | async; as bracket) {
+      <pre class="mb-0"><code>{{ bracket | json }}</code></pre>
+    } @else {
+      <span>Loading bracket details…</span>
+    }
+  </div>
+
+  <!-- Teams -->
+  <div class="mb-3">
+    <h4>Teams</h4>
+    @if (teams$ | async; as teams) {
+      @if (teams?.length > 0) {
+        <ul class="list-group">
+          @for (team of teams; track $index) {
+            <li class="list-group-item">
+              <!-- Adjust displayed fields to match your API shape -->
+              <div><strong>{{ team.name || team.teamName || 'Team' }}</strong></div>
+              <small class="text-muted">ID: {{ team.id || team.teamId }}</small>
+            </li>
+          }
+        </ul>
+      } @else {
+        <span>No teams found.</span>
+      }
+    } @else {
+      <span>Loading teams…</span>
+    }
+  </div>
+</div>
